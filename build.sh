@@ -1,15 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Builds the installable archive: dist/injellikrecommendations-<version>.zip
+# The archive contains a single "injellikrecommendations/" folder, as expected by the PrestaShop module manager.
+set -euo pipefail
+cd "$(dirname "$0")"
 
-# Nom du répertoire à compresser
-DIR="injellikrecommendations"
+MODULE=injellikrecommendations
+VERSION=$(sed -n "s/.*\$this->version = '\([^']*\)'.*/\1/p" "$MODULE/$MODULE.php")
+OUT="dist/$MODULE-$VERSION.zip"
 
-# Vérifier si le répertoire existe
-if [ -d "$DIR" ]; then
-    # Créer l'archive zip avec le répertoire
-    zip -r "${DIR}.zip" "$DIR"
-    echo "Le répertoire $DIR a été compressé dans ${DIR}.zip avec succès."
-else
-    echo "Erreur : Le répertoire $DIR n'existe pas."
-    exit 1
-fi
+mkdir -p dist
+rm -f "$OUT"
+zip -qr "$OUT" "$MODULE" \
+    -x "$MODULE/config*.xml" \
+    -x "*/.DS_Store" \
+    -x "*/Thumbs.db"
 
+echo "$OUT"

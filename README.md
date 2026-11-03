@@ -1,93 +1,323 @@
-# Injellik Prestashop
+<h1 align="center">
+  <img src="injellikrecommendations/logo.png" alt="" width="72"><br>
+  Injellik Recommendations pour PrestaShop
+</h1>
 
+<p align="center">
+  Recommandations de produits personnalisées, calculées à partir du comportement réel de vos visiteurs.
+</p>
 
+<p align="center">
+  <a href="https://github.com/guillaumemonet/injellik-prestashop/actions/workflows/ci.yml"><img src="https://github.com/guillaumemonet/injellik-prestashop/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/guillaumemonet/injellik-prestashop/releases/latest"><img src="https://img.shields.io/github/v/release/guillaumemonet/injellik-prestashop?label=version" alt="Dernière version"></a>
+  <img src="https://img.shields.io/badge/PrestaShop-8.0%20%E2%86%92%209.x-df0067" alt="PrestaShop 8.0 à 9.x">
+  <img src="https://img.shields.io/badge/PHP-7.2%20%E2%86%92%208.4-777bb4" alt="PHP 7.2 à 8.4">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-AFL--3.0-blue" alt="Licence AFL-3.0"></a>
+</p>
 
-## Getting started
+<p align="center">
+  <img src="docs/screenshots/front.png" alt="Bloc de recommandations sur une fiche produit" width="860">
+</p>
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Ce module connecte votre boutique à l'API **[Injellik](https://www.web-nest.fr/injellik)**. Il suit ce que font vos visiteurs (produits consultés, ajoutés au panier, commandés), l'envoie à Injellik qui en déduit chaque nuit les produits **consultés ensemble**, **achetés ensemble** et **similaires**, puis affiche des blocs de recommandations sur vos pages, avec les miniatures produit de votre thème.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Sommaire
 
-## Add your files
+- [Fonctionnalités](#fonctionnalités)
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Démarrage rapide](#démarrage-rapide)
+- [Afficher des recommandations](#afficher-des-recommandations)
+- [Données collectées](#données-collectées)
+- [Tâche cron](#tâche-cron)
+- [Page de suivi](#page-de-suivi)
+- [Configuration avancée](#configuration-avancée)
+- [Mise à jour depuis la version 1.x](#mise-à-jour-depuis-la-version-1x)
+- [Dépannage](#dépannage)
+- [Développement](#développement)
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Fonctionnalités
 
-```
-cd existing_repo
-git remote add origin https://gitlab.web-nest.fr/web-nest/injellik-prestashop.git
-git branch -M main
-git push -uf origin main
-```
+- **Assistant d'installation** en six étapes : connexion, synchronisation du catalogue, import de l'historique de commandes, choix des blocs.
+- **Six emplacements prêts à l'emploi** : fiche produit, panier, confirmation de commande, accueil, catégorie, plus un emplacement générique pour les widgets et les autres hooks.
+- **Sept stratégies** : consultés ensemble, achetés ensemble, produits similaires, personnalisées, clients similaires, les plus consultés, meilleures ventes. Chaque bloc a une stratégie de repli tant qu'Injellik apprend encore.
+- **Intégration libre** : `{widget name='injellikrecommendations'}` dans n'importe quel template, greffe sur n'importe quel hook, template surchargeable par le thème.
+- **Aucun impact sur les performances** :
+  - les blocs se chargent après la page, ce qui les rend compatibles avec les caches de page complète ;
+  - les événements passent par une file locale et sont envoyés après la réponse.
+- **Résilient** : une API lente ou indisponible ne ralentit ni ne casse jamais la boutique, y compris la validation des commandes. Les événements sont renvoyés automatiquement.
+- **Page de suivi** : état de l'API, activité, taux de clic par bloc, file d'événements, produits phares.
+- **Respect de la vie privée** : les visiteurs sont identifiés par des identifiants pseudonymes, aucune donnée personnelle ne quitte la boutique.
+- **Multiboutique** (un compte Injellik par boutique) et **multilingue** (titres par langue, interface en français et en anglais).
 
-## Integrate with your tools
+## Prérequis
 
-- [ ] [Set up project integrations](https://gitlab.web-nest.fr/web-nest/injellik-prestashop/-/settings/integrations)
+| | Version |
+|---|---|
+| PrestaShop | 8.0 à 9.x (testé sur 8.2 avec le thème Classic et sur 9.0 avec Hummingbird) |
+| PHP | 7.2.5 à 8.4, extension cURL |
+| Compte Injellik | URL de l'API, identifiant et mot de passe ([demander un compte](https://www.web-nest.fr/injellik)) |
 
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+Un thème compatible PrestaShop 8 (qui fournit `catalog/_partials/productlist.tpl`) affiche les blocs sans adaptation.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+1. Téléchargez **`injellikrecommendations-x.y.z.zip`** depuis la [dernière release](https://github.com/guillaumemonet/injellik-prestashop/releases/latest).
+   > N'utilisez pas « Download ZIP » de GitHub : cette archive contient tout le dépôt, et non le seul dossier du module.
+2. Dans le back-office, ouvrez **Modules > Gestionnaire de modules > Installer un module** et déposez le zip.
+3. Cliquez sur **Configurer** : l'assistant démarre.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+En ligne de commande :
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+unzip injellikrecommendations-x.y.z.zip -d /chemin/vers/prestashop/modules/
+php bin/console prestashop:module install injellikrecommendations
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## Démarrage rapide
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+L'assistant vous guide en six étapes. Le module ajoute ensuite le menu **Injellik** (section *Personnaliser*), avec les pages **Suivi** et **Paramètres**.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+<p align="center"><img src="docs/screenshots/onboarding.png" alt="Assistant : bienvenue" width="860"></p>
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+| Étape | Ce qui se passe |
+|---|---|
+| **Connexion** | URL de l'API, identifiant et mot de passe. Le bouton « Tester la connexion » vérifie que l'API répond et que les identifiants sont acceptés. |
+| **Catalogue** | Les produits sont envoyés par lots de 100, avec une barre de progression. |
+| **Historique** | Import facultatif des commandes passées depuis une date donnée. Les recommandations « achetés ensemble » sont ainsi disponibles dès le prochain entraînement, sans attendre des semaines de suivi. |
+| **Blocs** | Choix des emplacements, des stratégies, du nombre de produits et des titres. |
 
-## License
-For open source projects, say how it is licensed.
+<p align="center"><img src="docs/screenshots/catalog.png" alt="Assistant : synchronisation du catalogue" width="860"></p>
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+> **Quand les recommandations apparaissent-elles ?** Le suivi commence immédiatement. Injellik entraîne ses modèles chaque nuit. D'ici là, les blocs utilisent leur stratégie de repli (meilleures ventes, produits similaires…). Ils ne sont donc jamais vides si la boutique a déjà des ventes.
+
+## Afficher des recommandations
+
+### Emplacements intégrés
+
+| Emplacement | Hook | Produits sources | Par défaut |
+|---|---|---|---|
+| Page produit | `displayFooterProduct` | produit affiché | ✅ consultés ensemble → similaires |
+| Panier | `displayShoppingCartFooter` | produits du panier | ✅ achetés ensemble → meilleures ventes |
+| Confirmation de commande | `displayOrderConfirmation2` | produits commandés | ✅ achetés ensemble → personnalisées |
+| Page d'accueil | `displayHome` | historique du visiteur | ❌ personnalisées → les plus consultés |
+| Page catégorie | `displayFooterCategory` | historique du visiteur | ❌ personnalisées → les plus consultés |
+| Widget et autres hooks | au choix | produit affiché ou panier | ✅ personnalisées → les plus consultés |
+
+<p align="center"><img src="docs/screenshots/blocks.png" alt="Réglage des blocs" width="860"></p>
+
+### Stratégies
+
+| Code | Nom | Principe | Endpoint de l'API |
+|---|---|---|---|
+| `viewed` | Consultés ensemble | produits vus dans les mêmes sessions | `GET /api/recommendations/viewed/{sku}` |
+| `bought` | Achetés ensemble | produits commandés ensemble | `GET /api/recommendations/bought/{sku}` |
+| `similar` | Produits similaires | catégories, marque et prix proches | `GET /api/related/{sku}` |
+| `personalized` | Personnalisées | d'après l'activité récente du visiteur | `GET /api/recommendations/user/{uuid}` |
+| `predictive` | Clients similaires | ce qu'ont acheté les clients aux achats proches | `POST /api/recommendations/predictive` |
+| `most_viewed` | Les plus consultés | 30 derniers jours | `GET /api/community-rankings/most-viewed` |
+| `most_bought` | Meilleures ventes | 30 derniers jours | `GET /api/community-rankings/most-bought` |
+
+Le module complète la liste avec la stratégie de repli si la première ne renvoie pas assez de produits. Il retire :
+
+- les produits sources ;
+- les produits inactifs ou invisibles dans le catalogue ;
+- les produits épuisés qui ne peuvent pas être commandés (option).
+
+### Widget
+
+Le widget s'insère dans n'importe quel template du thème :
+
+```smarty
+{* Réglages de l'emplacement « Widget et autres hooks » *}
+{widget name='injellikrecommendations'}
+
+{* Mêmes réglages qu'un emplacement intégré *}
+{widget name='injellikrecommendations' placement='product'}
+
+{* Bloc entièrement personnalisé *}
+{widget name='injellikrecommendations' strategy='bought' fallback='most_bought' limit=4 title='Complétez le look'}
+
+{* Recommandations pour des produits donnés *}
+{widget name='injellikrecommendations' strategy='similar' product_id=$product.id}
+{widget name='injellikrecommendations' strategy='viewed' product_id='12,34,56'}
+```
+
+| Paramètre | Valeurs | Défaut |
+|---|---|---|
+| `placement` | `product`, `cart`, `order_confirmation`, `home`, `category`, `custom` | `custom` |
+| `strategy` | un code de stratégie | celui de l'emplacement |
+| `fallback` | un code de stratégie, ou `''` pour aucun repli | celui de l'emplacement |
+| `limit` | 1 à 24 | celui de l'emplacement |
+| `title` | texte | titre de l'emplacement |
+| `product_id` | un id ou plusieurs ids séparés par des virgules | produit affiché, sinon panier |
+
+Un widget qui précise `placement` s'affiche même si cet emplacement est désactivé : seuls les hooks automatiques respectent l'activation.
+
+### Sur un autre hook
+
+**Apparence > Positions > Greffer un module** : choisissez *Injellik Recommandations* puis le hook. Le bloc utilise les réglages de « Widget et autres hooks ».
+
+<p align="center"><img src="docs/screenshots/integration.png" alt="Onglet Intégration" width="860"></p>
+
+### Personnaliser le rendu
+
+Le bloc reprend la liste de produits du thème (`catalog/_partials/productlist.tpl`). Pour modifier son HTML, copiez le template dans votre thème :
+
+```
+modules/injellikrecommendations/views/templates/hook/recommendations.tpl
+  → themes/<votre-thème>/modules/injellikrecommendations/views/templates/hook/recommendations.tpl
+```
+
+Gardez l'attribut `data-injellik-placement` sur l'élément racine et `data-id-product` sur les miniatures : ce sont eux qui permettent de mesurer les clics.
+
+Les blocs sont chargés **en asynchrone**. La page contient un emplacement signé, que `views/js/front.js` remplace lorsqu'il approche de la zone visible. Après chaque insertion, un événement est émis sur `document` :
+
+```js
+document.addEventListener('injellik:loaded', (event) => {
+  const { element, placement } = event.detail; // initialiser un carrousel, etc.
+});
+```
+
+## Données collectées
+
+| Action | Déclencheur |
+|---|---|
+| `VIEW` | affichage d'une fiche produit |
+| `ADDCART` | ajout d'un produit au panier |
+| `BUY` | validation d'une commande (un événement par produit) |
+| `CLICK` | clic sur un produit recommandé |
+
+Chaque événement contient le type d'action, l'id produit et deux identifiants pseudonymes :
+
+- **`user_uuid`** :
+  - pour un client connecté, une empreinte de son id (`c-…`), calculée avec la clé secrète de la boutique et non réversible ;
+  - sinon, un identifiant aléatoire conservé dans le cookie PrestaShop (`v-…`).
+- **`user_session_uuid`** : identifiant de la visite, renouvelé après 30 minutes d'inactivité et après chaque commande.
+
+**Ne sont jamais envoyés** : nom, e-mail, adresse, IP ou contenu des commandes (montants, adresses).
+
+Pour le catalogue, le module envoie pour chaque produit :
+
+- l'id (le SKU côté Injellik), le nom, le résumé, le prix TTC et l'EAN ;
+- un champ `enabled`, à faux si le produit est inactif ou invisible ;
+- un `profile` (catégories, marque, prix) qui alimente le calcul des produits similaires.
+
+Les produits créés, modifiés ou supprimés sont synchronisés automatiquement, en un seul appel par requête, y compris pendant un import CSV.
+
+**File locale.** Les hooks n'appellent jamais l'API : ils écrivent une ligne dans `ps_injellik_event`. Les événements partent ensuite :
+
+- **à la fin de la requête** (par défaut) : avec PHP-FPM, après l'envoi de la page au visiteur ;
+- **ou par la tâche cron**.
+
+En cas d'erreur réseau ou serveur, un événement est retenté jusqu'à 5 fois. Les événements envoyés sont purgés après 30 jours. Les visites des robots sont ignorées.
+
+## Tâche cron
+
+Elle est recommandée. L'URL, avec son jeton, se trouve dans **Paramètres > Données** :
+
+```cron
+# Envoi des événements en attente, purge (toutes les 10 minutes)
+*/10 * * * * curl -s "https://votre-boutique.fr/module/injellikrecommendations/cron?token=XXXX" > /dev/null
+
+# Synchronisation complète du catalogue (facultatif, chaque nuit)
+30 2 * * *   curl -s "https://votre-boutique.fr/module/injellikrecommendations/cron?token=XXXX&task=catalog" > /dev/null
+```
+
+La réponse est un JSON, par exemple `{"events":{"sent":12,"failed":0,"pending":0},"purged":3}`.
+
+## Page de suivi
+
+<p align="center"><img src="docs/screenshots/dashboard.png" alt="Page de suivi" width="860"></p>
+
+- **Santé** : connexion et latence de l'API, événements des dernières 24 h, état du catalogue, dernier passage du cron, dernière erreur.
+- **Activité suivie** : événements par jour et par type sur 30 jours.
+- **Blocs de recommandations** : affichages, clics et taux de clic par emplacement.
+- **File d'événements** : envoyés, en attente, en erreur, avec deux boutons (envoyer maintenant, renvoyer les erreurs).
+- **Classements** : produits les plus consultés et les plus commandés selon Injellik.
+- **Derniers événements**, avec leur statut.
+
+<sub>Captures réalisées sur une boutique de démonstration avec des données simulées.</sub>
+
+## Configuration avancée
+
+Ces réglages se trouvent dans **Paramètres > Avancé**.
+
+| Réglage | Défaut | Détail |
+|---|---|---|
+| Affichage des blocs | Asynchrone | « Dans la page » appelle l'API pendant la génération de la page : les blocs sont visibles sans JavaScript, mais la page est plus lente. |
+| Envoi des événements | Fin de requête | Choisissez « Tâche cron uniquement » si PHP tourne en mod_php sous Apache. |
+| Délai d'attente de l'API | 3 s | Pour les appels du front. Le back-office et le cron attendent jusqu'à 20 s. |
+| Cache des recommandations | 900 s | Cache fichier dans `var/cache/<env>/injellik`. Les recommandations personnalisées sont gardées 60 s au maximum. |
+| Masquer les produits épuisés | oui | Seulement si la gestion des stocks est active. |
+| Ignorer les robots | oui | Filtre sur le user-agent. |
+| Synchronisation automatique | oui | Envoie un produit à son enregistrement. |
+
+**Multiboutique** : sélectionnez une boutique dans le sélecteur multiboutique avant de la configurer. Chaque boutique peut utiliser son propre compte Injellik, et les événements comme les statistiques sont séparés par boutique.
+
+## Mise à jour depuis la version 1.x
+
+Installez le nouveau zip par-dessus l'ancien module. Le script `upgrade/upgrade-2.0.0.php` :
+
+- conserve l'URL et les identifiants de l'API (une URL se terminant par `/api` est corrigée) ;
+- crée les tables, les nouveaux hooks et le menu.
+
+L'assistant s'ouvre à la visite suivante de la configuration : relancez la synchronisation du catalogue et, si besoin, l'import des commandes.
+
+## Dépannage
+
+| Symptôme | Piste |
+|---|---|
+| « Tester la connexion » échoue | Vérifiez l'URL (sans `/api`), que le serveur de la boutique peut joindre l'API (pare-feu sortant), et les identifiants. |
+| Aucun bloc ne s'affiche | Le thème doit appeler le hook (`displayFooterProduct`…). Vérifiez dans **Apparence > Positions** que le module y est greffé et que l'emplacement est activé. Un bloc sans produit à afficher est retiré de la page. |
+| Les blocs n'utilisent que la stratégie de repli | C'est normal tant que l'API n'a pas été entraînée sur assez de données (au moins deux sessions communes pour « consultés ensemble »). |
+| Des événements restent « en attente » | Consultez la dernière erreur sur la page de suivi, puis planifiez la tâche cron. |
+| Les boutons « liste d'envies » manquent sur les miniatures | Les modules qui initialisent les miniatures au chargement de la page doivent écouter l'événement `injellik:loaded`. |
+
+## Développement
+
+```bash
+docker compose up -d                                   # PrestaShop 8.2 sur http://localhost:8090, module monté
+PS_VERSION=9.0 PS_PORT=8091 docker compose -p injellik-ps9 up -d   # PrestaShop 9 en parallèle
+docker compose exec prestashop php bin/console prestashop:module install injellikrecommendations
+./build.sh                                             # → dist/injellikrecommendations-<version>.zip
+```
+
+Back-office : `/admin-dev`, `demo@prestashop.com` / `prestashop_demo`. Une API lancée sur la machine hôte est joignable depuis le conteneur à l'adresse `http://host.docker.internal:<port>`.
+
+```
+injellikrecommendations/
+├── injellikrecommendations.php      Module : hooks de suivi, widget
+├── classes/
+│   ├── InjellikApiClient.php        Client HTTP (JWT en cache, renouvelé sur 401)
+│   ├── InjellikConfig.php           Configuration, emplacements, stratégies
+│   ├── InjellikEventQueue.php       File locale et envoi des événements
+│   ├── InjellikIdentity.php         Identifiants visiteur et session
+│   ├── InjellikRecommender.php      Recommandations, filtres, rendu
+│   ├── InjellikSync.php             Catalogue et historique de commandes
+│   ├── InjellikStats.php            Affichages, clics, agrégats
+│   ├── InjellikCache.php            Cache fichier
+│   └── InjellikInstaller.php        Tables, hooks, onglets
+├── controllers/admin/               Paramètres (+ assistant) et Suivi
+├── controllers/front/               recommendations (rendu AJAX), track (clics), cron
+├── translations/fr-FR/              Modules.Injellikrecommendations.Admin / .Shop
+├── upgrade/                         Scripts de mise à jour
+└── views/                           Templates, JS, CSS
+```
+
+La CI (`.github/workflows/ci.yml`) :
+
+1. vérifie la syntaxe sous PHP 7.2, 7.4, 8.1, 8.3 et 8.4 ;
+2. installe le module sur PrestaShop 8.2 et 9.0 et contrôle hooks et onglets ;
+3. construit le zip et l'attache à la release GitHub pour chaque tag `v*`.
+
+**Publier une version.**
+
+1. Mettez à jour `$this->version` dans `injellikrecommendations.php` et `InjellikApiClient::VERSION`.
+2. Ajoutez si besoin `upgrade/upgrade-x.y.z.php`.
+3. Complétez `CHANGELOG.md`.
+4. Lancez `git tag vx.y.z && git push origin vx.y.z`.
+
+## Licence
+
+[Academic Free License 3.0](LICENSE) — © Web-Nest

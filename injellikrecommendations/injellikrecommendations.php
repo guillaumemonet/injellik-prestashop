@@ -1,281 +1,289 @@
 <?php
-
-use PrestaShop\PrestaShop\Adapter\Image\ImageRetriever;
-use PrestaShop\PrestaShop\Adapter\Product\PriceFormatter;
-use PrestaShop\PrestaShop\Adapter\Product\ProductColorsRetriever;
-use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
-
+/**
+ * Injellik Recommendations for PrestaShop.
+ *
+ * @author    Web-Nest <contact@web-nest.fr>
+ * @copyright Web-Nest
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
+ */
 if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-require_once dirname(__FILE__) . '/classes/InjellikApi.php';
-require_once dirname(__FILE__) . '/classes/InjellikRecommendationsManager.php';
-require_once dirname(__FILE__) . '/classes/InjellikBulkImport.php';
-require_once dirname(__FILE__) . '/classes/InjellikSessionManager.php';
+use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
 
-class InjellikRecommendations extends Module implements WidgetInterface {
+require_once __DIR__ . '/classes/InjellikConfig.php';
+require_once __DIR__ . '/classes/InjellikApiClient.php';
+require_once __DIR__ . '/classes/InjellikCache.php';
+require_once __DIR__ . '/classes/InjellikIdentity.php';
+require_once __DIR__ . '/classes/InjellikEventQueue.php';
+require_once __DIR__ . '/classes/InjellikStats.php';
+require_once __DIR__ . '/classes/InjellikSync.php';
+require_once __DIR__ . '/classes/InjellikRecommender.php';
+require_once __DIR__ . '/classes/InjellikInstaller.php';
 
-    public function __construct() {
+class InjellikRecommendations extends Module implements WidgetInterface
+{
+    public function __construct()
+    {
         $this->name = 'injellikrecommendations';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.0.3';
+        $this->version = '2.0.0';
         $this->author = 'Web-Nest';
         $this->need_instance = 0;
         $this->bootstrap = true;
+        $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => _PS_VERSION_];
+
         parent::__construct();
-        $this->displayName = $this->l('Injellik Recommendations');
-        $this->description = $this->l('Displays product recommendations and logs user interactions with an external API.');
+
+        $this->displayName = $this->trans('Injellik Recommendations', [], InjellikConfig::DOMAIN_ADMIN);
+        $this->description = $this->trans('Personalized product recommendations powered by the Injellik API: tracks views, carts and orders, and displays recommendation blocks on your pages.', [], InjellikConfig::DOMAIN_ADMIN);
+        $this->confirmUninstall = $this->trans('All the tracking history stored in your shop will be deleted. The data already sent to Injellik is kept.', [], InjellikConfig::DOMAIN_ADMIN);
     }
 
-    public function install() {
-        return parent::install() &&
-                $this->registerHook('displayFooterProduct') &&
-                $this->registerHook('displayShoppingCart') &&
-                $this->registerHook('actionCartUpdateQuantityBefore') &&
-                $this->registerHook('actionValidateOrder') &&
-                Configuration::updateValue('INJELLIK_API_URL', '') &&
-                Configuration::updateValue('INJELLIK_API_LOGIN', '') &&
-                Configuration::updateValue('INJELLIK_API_PASSWORD', '');
+    public function isUsingNewTranslationSystem()
+    {
+        return true;
     }
 
-    public function uninstall() {
-        return parent::uninstall() &&
-                Configuration::deleteByName('INJELLIK_API_URL') &&
-                Configuration::deleteByName('INJELLIK_API_LOGIN') &&
-                Configuration::deleteByName('INJELLIK_API_PASSWORD');
+    public function install()
+    {
+        if (Shop::isFeatureActive()) {
+            Shop::setContext(Shop::CONTEXT_ALL);
+        }
+
+        return parent::install() && (new InjellikInstaller($this))->install();
     }
 
-    public function hookDisplayFooterProduct($params) {
-        $productId = $params['product']['id_product'];
-        InjellikApi::sendAction('VIEW', $productId);
-
-        $mostViewedItems = InjellikApi::getMostViewed()['most_viewed_items'];
-
-        $products = $this->getProductsTemplates($mostViewedItems);
-        // Assigner le tableau des produits récupérés à Smarty
-        $this->smarty->assign('products', $products);
-        return $this->display(__FILE__, 'views/templates/front/recommendations.tpl');
+    public function uninstall()
+    {
+        return (new InjellikInstaller($this))->uninstall() && parent::uninstall();
     }
 
-    public function hookDisplayShoppingCart($params) {
-        // Exemple : récupérer le contenu du panier
-        $cart = $this->context->cart;
-
-        // Assigner des données à Smarty
-        $this->context->smarty->assign([
-            'cartTotal' => $cart->getOrderTotal(),
-            'cartProducts' => $cart->getProducts(),
-        ]);
-
-        // Retourner le template à afficher dans la page panier
-        return $this->display(__FILE__, 'views/templates/front/recommendations.tpl');
+    /**
+     * "Configure" button of the module manager: configuration page, or the onboarding when it is not done.
+     */
+    public function getContent()
+    {
+        Tools::redirectAdmin($this->context->link->getAdminLink('AdminInjellikConfiguration'));
     }
 
-    public function hookActionCartUpdateQuantityBefore($params) {
-        // Récupération de l'ID du produit et de l'ID du client
-        $productId = $params['product']->id;
-        $quantity = $params['quantity'];
+    /* ------------------------------------------------------------------
+     * Tracking
+     * ------------------------------------------------------------------ */
 
-        // Déterminer l'action en fonction de la quantité
-        if ($quantity > 0) {
-            // Action d'ajout ou de mise à jour de quantité
-            InjellikApi::sendAction('ADDCART', $productId);
-        } else {
-            // Action de suppression si la quantité est 0
-            InjellikApi::sendAction('REMOVECART', $productId);
+    /**
+     * Front assets, visitor identity and the VIEW action of product pages.
+     */
+    public function hookActionFrontControllerSetMedia()
+    {
+        if (!InjellikConfig::isConfigured()) {
+            return;
+        }
+
+        // The blocks need the script for every visitor; only the tracking ignores bots.
+        $this->context->controller->registerJavascript('modules-injellik', 'modules/' . $this->name . '/views/js/front.js', ['position' => 'bottom', 'priority' => 200, 'attributes' => 'defer']);
+        $this->context->controller->registerStylesheet('modules-injellik', 'modules/' . $this->name . '/views/css/front.css', ['media' => 'all', 'priority' => 200]);
+        Media::addJsDef(['injellik' => [
+            'renderUrl' => $this->context->link->getModuleLink($this->name, 'recommendations', [], null, null, null, true),
+            'trackUrl' => $this->context->link->getModuleLink($this->name, 'track', [], null, null, null, true),
+            'token' => Tools::getToken(false),
+        ]]);
+
+        if (!$this->isTrackingEnabled()) {
+            return;
+        }
+        InjellikIdentity::touch($this->context);
+
+        $controller = $this->context->controller;
+        if (isset($controller->php_self) && $controller->php_self === 'product' && !Tools::getValue('ajax')) {
+            $idProduct = (int) Tools::getValue('id_product');
+            if ($idProduct > 0) {
+                $this->track('VIEW', $idProduct);
+            }
         }
     }
 
-    public function hookActionValidateOrder($params) {
-        // Boucle sur chaque produit de la commande
-        foreach ($params['order']->getProducts() as $product) {
-            $productId = $product['product_id'];
-            // Appel de l'API pour chaque produit acheté
-            InjellikApi::sendAction('BUY', $productId);
+    public function hookActionCartUpdateQuantityBefore($params)
+    {
+        if (!$this->isTrackingEnabled() || (isset($params['operator']) && $params['operator'] !== 'up')) {
+            return;
+        }
+        $product = isset($params['product']) ? $params['product'] : null;
+        if ($product instanceof Product && $product->id) {
+            $this->track('ADDCART', (int) $product->id);
         }
     }
 
-    public function getWidgetVariables($hookName, array $configuration) {
-        $productIds = [];
-        if (!empty($productIds)) {
-            $products = null;
+    public function hookActionValidateOrder($params)
+    {
+        if (!InjellikConfig::isConfigured() || empty($params['order']) || !$params['order'] instanceof Order) {
+            return;
+        }
+        /** @var Order $order */
+        $order = $params['order'];
+        $user = InjellikIdentity::customerUuid((int) $order->id_customer);
+        $session = InjellikIdentity::sessionUuid($this->context);
 
-            if (!empty($products)) {
-                return [
-                    'products' => $products,
-                ];
+        foreach ($order->getProducts() as $line) {
+            InjellikEventQueue::push((int) $order->id_shop, 'BUY', (string) $line['product_id'], $user, $session, $line['product_name']);
+        }
+        InjellikIdentity::resetSession($this->context);
+    }
+
+    /**
+     * Queues an action of the current visitor (never calls the API during the request).
+     */
+    public function track($actionType, $idProduct, $rating = null)
+    {
+        if (!$this->isTrackingEnabled()) {
+            return null;
+        }
+
+        return InjellikEventQueue::push(
+            (int) $this->context->shop->id,
+            $actionType,
+            (string) (int) $idProduct,
+            InjellikIdentity::userUuid($this->context),
+            InjellikIdentity::sessionUuid($this->context),
+            null,
+            $rating
+        );
+    }
+
+    private function isTrackingEnabled()
+    {
+        return InjellikConfig::isConfigured()
+            && !(InjellikConfig::get(InjellikConfig::EXCLUDE_BOTS) && InjellikIdentity::isBot());
+    }
+
+    /* ------------------------------------------------------------------
+     * Catalog synchronisation
+     * ------------------------------------------------------------------ */
+
+    public function hookActionObjectProductAddAfter($params)
+    {
+        $this->markProductDirty($params);
+    }
+
+    public function hookActionObjectProductUpdateAfter($params)
+    {
+        $this->markProductDirty($params);
+    }
+
+    public function hookActionObjectProductDeleteAfter($params)
+    {
+        $this->markProductDirty($params);
+    }
+
+    private function markProductDirty($params)
+    {
+        if (!empty($params['object']) && $params['object'] instanceof Product && InjellikConfig::isConfigured()) {
+            InjellikSync::markProductDirty((int) $params['object']->id);
+        }
+    }
+
+    /* ------------------------------------------------------------------
+     * Display: hooks and widget
+     * ------------------------------------------------------------------ */
+
+    public function hookDisplayFooterProduct($params)
+    {
+        return $this->renderWidget('displayFooterProduct', $params);
+    }
+
+    public function hookDisplayShoppingCartFooter($params)
+    {
+        return $this->renderWidget('displayShoppingCartFooter', $params);
+    }
+
+    public function hookDisplayOrderConfirmation2($params)
+    {
+        return $this->renderWidget('displayOrderConfirmation2', $params);
+    }
+
+    public function hookDisplayHome($params)
+    {
+        return $this->renderWidget('displayHome', $params);
+    }
+
+    public function hookDisplayFooterCategory($params)
+    {
+        return $this->renderWidget('displayFooterCategory', $params);
+    }
+
+    /**
+     * Widget usable anywhere in a template:
+     *   {widget name='injellikrecommendations'}
+     *   {widget name='injellikrecommendations' placement='product'}
+     *   {widget name='injellikrecommendations' strategy='bought' product_id=$product.id limit=4 title='Complete the look'}
+     * and on any hook through Design > Positions.
+     */
+    public function renderWidget($hookName, array $configuration)
+    {
+        $variables = $this->getWidgetVariables($hookName, $configuration);
+        if (!$variables) {
+            return '';
+        }
+
+        return (new InjellikRecommender($this, $this->context))->renderBlock($variables['request']);
+    }
+
+    public function getWidgetVariables($hookName, array $configuration)
+    {
+        if (!InjellikConfig::isConfigured()) {
+            return [];
+        }
+
+        $explicit = !empty($configuration['placement']);
+        $key = $explicit ? (string) $configuration['placement'] : InjellikConfig::placementForHook($hookName);
+        if ($key === null || !InjellikConfig::placement($key)) {
+            $key = 'custom';
+        }
+        $placement = InjellikConfig::placement($key);
+        if (!$placement['enabled'] && !$explicit) {
+            return [];
+        }
+
+        $overrides = [];
+        foreach (['strategy', 'fallback', 'limit', 'title'] as $option) {
+            if (isset($configuration[$option]) && is_scalar($configuration[$option])) {
+                $overrides[$option] = (string) $configuration[$option];
             }
         }
 
-        return false;
+        $recommender = new InjellikRecommender($this, $this->context);
+
+        return ['request' => $recommender->buildRequest($key, $this->contextProducts($key, $configuration), $overrides)];
     }
 
-    public function renderWidget($hookName, array $configuration) {
-
-        return $this->fetch('views/templates/front/recommendations.tpl');
-    }
-
-    public function getContent() {
-        $output = '';
-        if (Tools::isSubmit('submitInjellikConfig')) {
-            Configuration::updateValue('INJELLIK_API_URL', Tools::getValue('INJELLIK_API_URL'));
-            Configuration::updateValue('INJELLIK_API_LOGIN', Tools::getValue('INJELLIK_API_LOGIN'));
-            Configuration::updateValue('INJELLIK_API_PASSWORD', Tools::getValue('INJELLIK_API_PASSWORD'));
-            $output .= $this->displayConfirmation($this->l('Settings updated'));
+    /**
+     * Products the recommendations are computed from: explicit parameter, hook parameters, then page context.
+     *
+     * @return int[]
+     */
+    private function contextProducts($placementKey, array $configuration)
+    {
+        if (!empty($configuration['product_id'])) {
+            return array_map('intval', is_array($configuration['product_id']) ? $configuration['product_id'] : explode(',', (string) $configuration['product_id']));
         }
-
-        if (Tools::isSubmit('submitImportOrders')) {
-            InjellikBulkImport::importOrders();
-            $output .= $this->displayConfirmation($this->l('Orders imported successfully.'));
-        }
-
-        if (Tools::isSubmit('submitImportProducts')) {
-            InjellikBulkImport::importProducts();
-            $output .= $this->displayConfirmation($this->l('Products imported successfully.'));
-        }
-
-        return $output . $this->renderConfigurationForm();
-    }
-
-    protected function renderConfigurationForm() {
-        $fields_form = [
-            [
-                'form' => [
-                    'legend' => [
-                        'title' => $this->l('Injellik API Settings')
-                    ],
-                    'input' => [
-                        [
-                            'type' => 'text',
-                            'label' => $this->l('API URL'),
-                            'name' => 'INJELLIK_API_URL',
-                            'required' => true
-                        ],
-                        [
-                            'type' => 'text',
-                            'label' => $this->l('API Login'),
-                            'name' => 'INJELLIK_API_LOGIN',
-                            'required' => true
-                        ],
-                        [
-                            'type' => 'password',
-                            'label' => $this->l('API Password'),
-                            'name' => 'INJELLIK_API_PASSWORD',
-                            'required' => true
-                        ],
-                    ],
-                    'submit' => [
-                        'title' => $this->l('Save')
-                    ]
-                ]
-            ],
-            [
-                'form' => [
-                    'legend' => [
-                        'title' => $this->l('Data Import Options')
-                    ],
-                    'input' => [
-                        [
-                            'type' => 'text',
-                            'label' => $this->l('Last Imported Order ID'),
-                            'name' => 'INJELLIK_LAST_IMPORTED_ORDER_ID',
-                            'readonly' => true
-                        ]
-                    ],
-                    'buttons' => [
-                        [
-                            'type' => 'button',
-                            'name' => 'submitImportOrders',
-                            'id' => 'submitImportOrders',
-                            'class' => 'btn btn-primary',
-                            'title' => $this->l('Import Orders in Bulk'),
-                            'text' => $this->l('Import Orders in Bulk'), // Texte du bouton
-                            'onclick' => 'importOrdersInBulk();'
-                        ],
-                        [
-                            'type' => 'button',
-                            'name' => 'submitImportProducts',
-                            'id' => 'submitImportProducts',
-                            'class' => 'btn btn-primary',
-                            'title' => $this->l('Import Products in Bulk'),
-                            'text' => $this->l('Import Products in Bulk'), // Texte du bouton
-                            'onclick' => 'importProductsInBulk();'
-                        ]
-                    ]
-                ]
-            ],
-            [
-                'form' => [
-                    'legend' => [
-                        'title' => $this->l('Injellik Information')
-                    ],
-                    'description' => $this->l('Injellik is a recommendation API that allows you to enhance your store with personalized product recommendations. To get started with Injellik, please register on the following page: <a href="https://www.web-nest.fr/injellik" target="_blank">https://www.web-nest.fr/injellik</a>')
-                ]
-            ]
-        ];
-
-        $helper = new HelperForm();
-        $helper->submit_action = 'submitInjellikConfig';
-        $helper->fields_value = [
-            'INJELLIK_API_URL' => Configuration::get('INJELLIK_API_URL'),
-            'INJELLIK_API_LOGIN' => Configuration::get('INJELLIK_API_LOGIN'),
-            'INJELLIK_API_PASSWORD' => Configuration::get('INJELLIK_API_PASSWORD'),
-            'INJELLIK_LAST_IMPORTED_ORDER_ID' => Configuration::get('INJELLIK_LAST_IMPORTED_ORDER_ID'), // ID de la dernière commande importée
-        ];
-        $helper->module = $this;
-
-        return $helper->generateForm($fields_form);
-    }
-
-    private function getProductsTemplates($idProducts) {
-        if (!empty($idProducts)) {
-            $showPrice = true; //(bool) Configuration::get('CROSSSELLING_DISPLAY_PRICE');
-
-            $assembler = new ProductAssembler($this->context);
-
-            $presenterFactory = new ProductPresenterFactory($this->context);
-            $presentationSettings = $presenterFactory->getPresentationSettings();
-            if (version_compare(_PS_VERSION_, '1.7.5', '>=')) {
-                $presenter = new \PrestaShop\PrestaShop\Adapter\Presenter\Product\ProductListingPresenter(
-                        new ImageRetriever(
-                                $this->context->link
-                        ),
-                        $this->context->link,
-                        new PriceFormatter(),
-                        new ProductColorsRetriever(),
-                        $this->context->getTranslator()
-                );
-            } else {
-                $presenter = new \PrestaShop\PrestaShop\Core\Product\ProductListingPresenter(
-                        new ImageRetriever(
-                                $this->context->link
-                        ),
-                        $this->context->link,
-                        new PriceFormatter(),
-                        new ProductColorsRetriever(),
-                        $this->context->getTranslator()
-                );
+        if (!empty($configuration['product']) && (is_array($configuration['product']) || $configuration['product'] instanceof ArrayAccess)) {
+            if (!empty($configuration['product']['id_product'])) {
+                return [(int) $configuration['product']['id_product']];
             }
-
-            $productsForTemplate = [];
-
-            $presentationSettings->showPrices = $showPrice;
-
-            if (is_array($idProducts)) {
-                foreach ($idProducts as $productId) {
-                    $assembled = $assembler->assembleProduct(['id_product' => (int) $productId['sku']]);
-                    if ($assembled !== false) {
-                        $productsForTemplate[] = $presenter->present(
-                                $presentationSettings,
-                                $assembled,
-                                $this->context->language
-                        );
-                    }
-                }
-            }
-
-            return $productsForTemplate;
         }
+        if (!empty($configuration['order']) && $configuration['order'] instanceof Order) {
+            return array_map('intval', array_column($configuration['order']->getProducts(), 'product_id'));
+        }
+
+        $controller = $this->context->controller;
+        if (isset($controller->php_self) && $controller->php_self === 'product' && Tools::getValue('id_product')) {
+            return [(int) Tools::getValue('id_product')];
+        }
+        if (($placementKey === 'cart' || (isset($controller->php_self) && $controller->php_self === 'cart')) && $this->context->cart && $this->context->cart->id) {
+            return array_map('intval', array_column($this->context->cart->getProducts(), 'id_product'));
+        }
+
+        return [];
     }
 }

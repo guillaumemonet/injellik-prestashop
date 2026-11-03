@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="injellikrecommendations" source-language="en-US" target-language="fr-FR" datatype="plaintext">
+    <body>
+      <trans-unit id="01f7ac959c1e6ebbb2e0ee706a7a5255">
+        <source>Best sellers</source>
+        <target>Meilleures ventes</target>
+      </trans-unit>
+      <trans-unit id="3d564a9adbc6842b20c8bcd34aad4699">
+        <source>Customers who viewed this product also viewed</source>
+        <target>Les clients ayant consulté ce produit ont aussi regardé</target>
+      </trans-unit>
+      <trans-unit id="4a32807b8672bc14fc765689533c948d">
+        <source>Frequently bought together</source>
+        <target>Souvent achetés ensemble</target>
+      </trans-unit>
+      <trans-unit id="4065b5ad1596bc7f2ccb7da7476cae6b">
+        <source>Most viewed products</source>
+        <target>Les plus consultés</target>
+      </trans-unit>
+      <trans-unit id="f4788cbfdd29e14417053fc03d28cf15">
+        <source>Selected for you</source>
+        <target>Sélectionnés pour vous</target>
+      </trans-unit>
+      <trans-unit id="f1cc4aaa3a819956844e508917e6f80b">
+        <source>Similar products</source>
+        <target>Produits similaires</target>
+      </trans-unit>
+      <trans-unit id="124117dd22bc1dce2b0687b65f35f091">
+        <source>You may also like</source>
+        <target>Vous aimerez aussi</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -1,0 +1,811 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="injellikrecommendations" source-language="en-US" target-language="fr-FR" datatype="plaintext">
+    <body>
+      <trans-unit id="1d1f7628d3f2eec3ee890116ca67f806">
+        <source>%d / %d orders</source>
+        <target>%d / %d commandes</target>
+      </trans-unit>
+      <trans-unit id="5ce7934f0dac226c4d17bb9a12f111ac">
+        <source>%d / %d products</source>
+        <target>%d / %d produits</target>
+      </trans-unit>
+      <trans-unit id="de92ce5576a9b2975a683d295dd940f1">
+        <source>%d orders imported.</source>
+        <target>%d commandes importées.</target>
+      </trans-unit>
+      <trans-unit id="477e1d2957b41ba13c9f7874c6caf6d0">
+        <source>%d products synchronised.</source>
+        <target>%d produits synchronisés.</target>
+      </trans-unit>
+      <trans-unit id="05b27753328ec0eeed10c8b657c61d1f">
+        <source>%d sent, %d failed, %d pending</source>
+        <target>%d envoyés, %d en échec, %d en attente</target>
+      </trans-unit>
+      <trans-unit id="299545e8686c7c3d5d2740ffedcad1f6">
+        <source>1. Hook the module on another position</source>
+        <target>1. Greffer le module sur une autre position</target>
+      </trans-unit>
+      <trans-unit id="a2d40d9d86ecdd2b3a5a9a6333f9a3bc">
+        <source>1. Tracking</source>
+        <target>1. Suivi</target>
+      </trans-unit>
+      <trans-unit id="fed6eac887b947528de823690e2fdea8">
+        <source>2. Insert a widget in a template</source>
+        <target>2. Insérer un widget dans un template</target>
+      </trans-unit>
+      <trans-unit id="27290d8e9dfba4bfd53fecb2737a6515">
+        <source>2. Learning</source>
+        <target>2. Apprentissage</target>
+      </trans-unit>
+      <trans-unit id="43efba116c2bafba18abb219fcd31060">
+        <source>3. Customise the template</source>
+        <target>3. Personnaliser le template</target>
+      </trans-unit>
+      <trans-unit id="6df47aebbc6bd09cf71a886ebcdf0b0e">
+        <source>3. Recommendations</source>
+        <target>3. Recommandations</target>
+      </trans-unit>
+      <trans-unit id="ad9b1e6027cc7fd591a6740bb90a6d9b">
+        <source>30 days, from Injellik</source>
+        <target>30 jours, selon Injellik</target>
+      </trans-unit>
+      <trans-unit id="c2dc5157267cef6aa865d32ef2673e18">
+        <source>A display is counted when a block with at least one product is shown; a click when a visitor opens a recommended product.</source>
+        <target>Un affichage est compté quand un bloc contenant au moins un produit est montré ; un clic quand un visiteur ouvre un produit recommandé.</target>
+      </trans-unit>
+      <trans-unit id="1f37743cdcdef44b3d80e8c166c6c3ce">
+        <source>API URL</source>
+        <target>URL de l'API</target>
+      </trans-unit>
+      <trans-unit id="acd13d45936156b98fd2b0d3713f18ff">
+        <source>API timeout</source>
+        <target>Délai d'attente de l'API</target>
+      </trans-unit>
+      <trans-unit id="004bf6c9a40003140292e97330236c53">
+        <source>Action</source>
+        <target>Action</target>
+      </trans-unit>
+      <trans-unit id="a4b836b1472e9ee37842eae94d9e0e65">
+        <source>Add blocks anywhere in your theme</source>
+        <target>Ajoutez des blocs n'importe où dans votre thème</target>
+      </trans-unit>
+      <trans-unit id="812bc2eb1d85170c4a369748fd7ff094">
+        <source>Address of your Injellik API, without the /api suffix.</source>
+        <target>Adresse de votre API Injellik, sans le suffixe /api.</target>
+      </trans-unit>
+      <trans-unit id="9b6545e4cea9b4ad4979d41bb9170e2b">
+        <source>Advanced</source>
+        <target>Avancé</target>
+      </trans-unit>
+      <trans-unit id="fe4c6a5e7bd6793b37370e4e46daf998">
+        <source>Advanced settings</source>
+        <target>Paramètres avancés</target>
+      </trans-unit>
+      <trans-unit id="c0327490cd7237b36d639d63bcbd398c">
+        <source>After the order, computed from the products ordered.</source>
+        <target>Après la commande, calculé à partir des produits commandés.</target>
+      </trans-unit>
+      <trans-unit id="01a4ca4f145e8872a4971382bb5bf246">
+        <source>All the tracking history stored in your shop will be deleted. The data already sent to Injellik is kept.</source>
+        <target>Tout l'historique de suivi stocké dans votre boutique sera supprimé. Les données déjà envoyées à Injellik sont conservées.</target>
+      </trans-unit>
+      <trans-unit id="8d46343ef23aac7a16f138382701417f">
+        <source>Asynchronous (recommended)</source>
+        <target>Asynchrone (recommandé)</target>
+      </trans-unit>
+      <trans-unit id="8e8bdc0375048cc22b50a312ff4f8ad2">
+        <source>Asynchronous: the page is displayed immediately and the blocks are loaded when they come into view. In the page: the API is called while the page is generated (slower pages, blocks visible without JavaScript).</source>
+        <target>Asynchrone : la page s'affiche immédiatement et les blocs se chargent lorsqu'ils deviennent visibles. Dans la page : l'API est appelée pendant la génération de la page (pages plus lentes, blocs visibles sans JavaScript).</target>
+      </trans-unit>
+      <trans-unit id="0c643860b0f06b33b40cf05c3ef3c655">
+        <source>At the end of each request (recommended)</source>
+        <target>À la fin de chaque requête (recommandé)</target>
+      </trans-unit>
+      <trans-unit id="2ec236fdfa3423f42f731c64d79428a3">
+        <source>Authentication failed: %s</source>
+        <target>Échec de l'authentification : %s</target>
+      </trans-unit>
+      <trans-unit id="0557fa923dcee4d0f86b1409f5c2167f">
+        <source>Back</source>
+        <target>Retour</target>
+      </trans-unit>
+      <trans-unit id="1ed9dbd508bc0dc636f7d82e41524fa1">
+        <source>Based on the recent activity of the visitor.</source>
+        <target>D'après l'activité récente du visiteur.</target>
+      </trans-unit>
+      <trans-unit id="20b768bc7e6a245d07283503ab219ef8">
+        <source>Below the cart summary, computed from the products in the cart.</source>
+        <target>Sous le récapitulatif du panier, calculé à partir des produits du panier.</target>
+      </trans-unit>
+      <trans-unit id="8cf8a472631cdf68472abe8d17c94fc2">
+        <source>Below the product description.</source>
+        <target>Sous la description du produit.</target>
+      </trans-unit>
+      <trans-unit id="30022279db6f8d5072212915de08c80a">
+        <source>Below the product list of the categories.</source>
+        <target>Sous la liste des produits des catégories.</target>
+      </trans-unit>
+      <trans-unit id="01f7ac959c1e6ebbb2e0ee706a7a5255">
+        <source>Best sellers</source>
+        <target>Meilleures ventes</target>
+      </trans-unit>
+      <trans-unit id="e1e4c8c9ccd9fc39c391da4bcd093fb2">
+        <source>Block</source>
+        <target>Bloc</target>
+      </trans-unit>
+      <trans-unit id="1b9efb5dc20a72e7941d466988a94478">
+        <source>Block rendering</source>
+        <target>Affichage des blocs</target>
+      </trans-unit>
+      <trans-unit id="04c4f9f595c4f21d1de65eb07056c15a">
+        <source>Blocks</source>
+        <target>Blocs</target>
+      </trans-unit>
+      <trans-unit id="d2374a55c8163612a6e61be38fbd0ab6">
+        <source>Blocks inserted with {widget} or hooked on another position in Design / Positions.</source>
+        <target>Blocs insérés avec {widget} ou greffés sur une autre position dans Apparence / Positions.</target>
+      </trans-unit>
+      <trans-unit id="32801ab62a3d44483ebca38d77904cea">
+        <source>Blocks on the product, cart and confirmation pages, or anywhere in your theme with a widget, using your theme product miniatures.</source>
+        <target>Des blocs sur les pages produit, panier et confirmation, ou n'importe où dans votre thème grâce à un widget, avec les miniatures produit de votre thème.</target>
+      </trans-unit>
+      <trans-unit id="4625565f175e9672bcce36f63cd00ea7">
+        <source>Bought together</source>
+        <target>Achetés ensemble</target>
+      </trans-unit>
+      <trans-unit id="70beb4cc132ee780c800f5134b96db7a">
+        <source>By the cron task only</source>
+        <target>Uniquement par la tâche cron</target>
+      </trans-unit>
+      <trans-unit id="ff2a7a5418a49af64a57ef3cf31d7721">
+        <source>CTR</source>
+        <target>Taux de clic</target>
+      </trans-unit>
+      <trans-unit id="a85eba4c6c699122b2bb1387ea4813ad">
+        <source>Cart</source>
+        <target>Panier</target>
+      </trans-unit>
+      <trans-unit id="c32516babc5b6c47eb8ce1bfc223253c">
+        <source>Catalog</source>
+        <target>Catalogue</target>
+      </trans-unit>
+      <trans-unit id="bc4327368b4abb06c1ea90fe0ddd36d6">
+        <source>Category page</source>
+        <target>Page catégorie</target>
+      </trans-unit>
+      <trans-unit id="6aaae874d2fc074857e17621196abef5">
+        <source>Choose where to display recommendations</source>
+        <target>Choisissez où afficher les recommandations</target>
+      </trans-unit>
+      <trans-unit id="cbdb553aaace16e77bb205e9bc3375ef">
+        <source>Clicks</source>
+        <target>Clics</target>
+      </trans-unit>
+      <trans-unit id="254f642527b45bc260048e30704edb39">
+        <source>Configuration</source>
+        <target>Configuration</target>
+      </trans-unit>
+      <trans-unit id="2e123719c520a7dd2556cd1051dfd745">
+        <source>Connect and continue</source>
+        <target>Connecter et continuer</target>
+      </trans-unit>
+      <trans-unit id="5effd0f012ca41f990d65162ab413c2f">
+        <source>Connect your shop to Injellik</source>
+        <target>Connectez votre boutique à Injellik</target>
+      </trans-unit>
+      <trans-unit id="2ec0d16e4ca169baedb9b2d50ec5c6d7">
+        <source>Connected</source>
+        <target>Connectée</target>
+      </trans-unit>
+      <trans-unit id="c2cc7082a89c1ad6631a2f66af5f00c0">
+        <source>Connection</source>
+        <target>Connexion</target>
+      </trans-unit>
+      <trans-unit id="4dc7241a0bc8ba5be38a207f4140bbd0">
+        <source>Connection successful.</source>
+        <target>Connexion réussie.</target>
+      </trans-unit>
+      <trans-unit id="a0bfb8e59e6c13fc8d990781f77694fe">
+        <source>Continue</source>
+        <target>Continuer</target>
+      </trans-unit>
+      <trans-unit id="5fb63579fc981698f97d55bfecb213ea">
+        <source>Copy</source>
+        <target>Copier</target>
+      </trans-unit>
+      <trans-unit id="0247cda4e77ac7cb924fda0ebeb7a605">
+        <source>Copy the template into your theme to change the markup; the product miniatures come from your theme.</source>
+        <target>Copiez le template dans votre thème pour en modifier le HTML ; les miniatures produit proviennent de votre thème.</target>
+      </trans-unit>
+      <trans-unit id="84c5e3e99a3639c800fa9dad2ebc206b">
+        <source>Cron task</source>
+        <target>Tâche cron</target>
+      </trans-unit>
+      <trans-unit id="c0b40c391d14f3752610d62a0be80716">
+        <source>Customers like you</source>
+        <target>Clients similaires</target>
+      </trans-unit>
+      <trans-unit id="3d564a9adbc6842b20c8bcd34aad4699">
+        <source>Customers who viewed this product also viewed</source>
+        <target>Les clients ayant consulté ce produit ont aussi regardé</target>
+      </trans-unit>
+      <trans-unit id="2938c7f7e560ed972f8a4f68e80ff834">
+        <source>Dashboard</source>
+        <target>Suivi</target>
+      </trans-unit>
+      <trans-unit id="f6068daa29dbb05a7ead1e3b5a48bbee">
+        <source>Data</source>
+        <target>Données</target>
+      </trans-unit>
+      <trans-unit id="44749712dbec183e983dcd78a7736c41">
+        <source>Date</source>
+        <target>Date</target>
+      </trans-unit>
+      <trans-unit id="818fd92f14f070930a55ded3e4b8c70f">
+        <source>Design &gt; Positions &gt; Transplant a module, then choose the hook. The block uses the settings of "Widget and other hooks".</source>
+        <target>Apparence &gt; Positions &gt; Greffer un module, puis choisissez le hook. Le bloc utilise les réglages de « Widget et autres hooks ».</target>
+      </trans-unit>
+      <trans-unit id="c8a59e7135a20b362f9c768b09454fdb">
+        <source>Dismiss</source>
+        <target>Masquer</target>
+      </trans-unit>
+      <trans-unit id="8cdae28946ee995a7373dbbdbf9d48c1">
+        <source>Display blocks in your theme</source>
+        <target>Afficher des blocs dans votre thème</target>
+      </trans-unit>
+      <trans-unit id="8e8c433c150b19661c7356c12fc0da61">
+        <source>Displays</source>
+        <target>Affichages</target>
+      </trans-unit>
+      <trans-unit id="f92965e2c8a7afb3c1b9a5c09a263636">
+        <source>Done</source>
+        <target>Terminé</target>
+      </trans-unit>
+      <trans-unit id="4727b6d2a257ec248d76d60576b5e4e5">
+        <source>Enable the blocks you want. Each block uses a strategy, and a fallback strategy while Injellik is still learning. You can change everything later.</source>
+        <target>Activez les blocs souhaités. Chaque bloc utilise une stratégie, et une stratégie de repli tant qu'Injellik apprend encore. Tout est modifiable par la suite.</target>
+      </trans-unit>
+      <trans-unit id="34b3157de559ca35638f66835a643ac1">
+        <source>Enter the credentials of your Injellik API account. They are stored in your shop configuration and only used by the server.</source>
+        <target>Saisissez les identifiants de votre compte API Injellik. Ils sont stockés dans la configuration de votre boutique et utilisés uniquement côté serveur.</target>
+      </trans-unit>
+      <trans-unit id="4233a3f9f3e7932af2aa85b60811ecfb">
+        <source>Event queue</source>
+        <target>File d'événements</target>
+      </trans-unit>
+      <trans-unit id="846699c34236de3e797fc72da91e179e">
+        <source>Events (24 h)</source>
+        <target>Événements (24 h)</target>
+      </trans-unit>
+      <trans-unit id="49f930bf860ceb1d3a3483584297c057">
+        <source>Events are always stored in your shop first. With PHP-FPM they are sent after the page has been delivered to the visitor.</source>
+        <target>Les événements sont toujours d'abord enregistrés dans votre boutique. Avec PHP-FPM, ils sont envoyés après la livraison de la page au visiteur.</target>
+      </trans-unit>
+      <trans-unit id="70be65c92ece3354993ac8d80d3af5e8">
+        <source>Events per day</source>
+        <target>Événements par jour</target>
+      </trans-unit>
+      <trans-unit id="6edda7b2fa6b64af962953a3f6e7f7e7">
+        <source>Every night, Injellik computes which products are viewed and bought together and which products are similar.</source>
+        <target>Chaque nuit, Injellik calcule quels produits sont consultés et achetés ensemble, et quels produits se ressemblent.</target>
+      </trans-unit>
+      <trans-unit id="4a32807b8672bc14fc765689533c948d">
+        <source>Frequently bought together</source>
+        <target>Souvent achetés ensemble</target>
+      </trans-unit>
+      <trans-unit id="61f7a1d7a9496d2d8fb3df21d20afe1a">
+        <source>Generate a new token</source>
+        <target>Générer un nouveau jeton</target>
+      </trans-unit>
+      <trans-unit id="cb59b87e00d11222bfd9159d0d23836f">
+        <source>Getting started</source>
+        <target>Prise en main</target>
+      </trans-unit>
+      <trans-unit id="c6da034f1784ccb94da5c6ba6e976615">
+        <source>Hide out-of-stock products that cannot be ordered</source>
+        <target>Masquer les produits épuisés qui ne peuvent pas être commandés</target>
+      </trans-unit>
+      <trans-unit id="7b19b37e7fc3dfe3c3e1ad5b84c7f565">
+        <source>Home page</source>
+        <target>Page d'accueil</target>
+      </trans-unit>
+      <trans-unit id="afb8da8e2335e01aab9d1591e2a69456">
+        <source>If there are not enough results</source>
+        <target>S'il n'y a pas assez de résultats</target>
+      </trans-unit>
+      <trans-unit id="35a37b804494625be4af40ffeea5c7f3">
+        <source>Ignore the visits of bots and crawlers</source>
+        <target>Ignorer les visites des robots d'indexation</target>
+      </trans-unit>
+      <trans-unit id="962f9260c2e52b42979edf5d561420a8">
+        <source>Import the orders</source>
+        <target>Importer les commandes</target>
+      </trans-unit>
+      <trans-unit id="595b6f3123b1b9456e54c5708dee7a20">
+        <source>Import your order history</source>
+        <target>Importez votre historique de commandes</target>
+      </trans-unit>
+      <trans-unit id="09958c93277a3cbdcd46f66e4b95a8d5">
+        <source>In the page</source>
+        <target>Dans la page</target>
+      </trans-unit>
+      <trans-unit id="d61cd36aecb54cfcbf99c954e36dd580">
+        <source>Injellik API</source>
+        <target>API Injellik</target>
+      </trans-unit>
+      <trans-unit id="ae8833984099f9c00ab75e31ff0ce340">
+        <source>Injellik API account</source>
+        <target>Compte API Injellik</target>
+      </trans-unit>
+      <trans-unit id="bc1c9e85bec7b49b2b2f0a862c4ecc1e">
+        <source>Injellik Recommendations</source>
+        <target>Injellik Recommandations</target>
+      </trans-unit>
+      <trans-unit id="9e639841e95d60ab295df4a5b5a6361e">
+        <source>Injellik is ready</source>
+        <target>Injellik est prêt</target>
+      </trans-unit>
+      <trans-unit id="2b941ac09c52fb89669cb0a967688638">
+        <source>Injellik learns from the behaviour of your visitors (products viewed, added to cart, ordered) and displays recommendation blocks on your pages. Setup takes about five minutes.</source>
+        <target>Injellik apprend du comportement de vos visiteurs (produits consultés, ajoutés au panier, commandés) et affiche des blocs de recommandations sur vos pages. La mise en place prend environ cinq minutes.</target>
+      </trans-unit>
+      <trans-unit id="1115b855bb2a508bc2ca0609cc2d0f65">
+        <source>Integration</source>
+        <target>Intégration</target>
+      </trans-unit>
+      <trans-unit id="98054d1d81c05ddf432c741f0a6bc246">
+        <source>It retries the events that could not be sent and cleans the old ones. The URL is on the configuration page.</source>
+        <target>Elle renvoie les événements qui n'ont pas pu être envoyés et supprime les anciens. L'URL figure sur la page de configuration.</target>
+      </trans-unit>
+      <trans-unit id="92de805ae582ce6049f832471539737c">
+        <source>Last error</source>
+        <target>Dernière erreur</target>
+      </trans-unit>
+      <trans-unit id="7758e95c5e170c034c9e84dfeb06c2cb">
+        <source>Last event sent:</source>
+        <target>Dernier événement envoyé :</target>
+      </trans-unit>
+      <trans-unit id="0dd6faaaaa5bfcf2924ff43b0b60c011">
+        <source>Last full synchronisation:</source>
+        <target>Dernière synchronisation complète :</target>
+      </trans-unit>
+      <trans-unit id="d4c50e12cba341afd91dc19c2e40fd30">
+        <source>Last import:</source>
+        <target>Dernier import :</target>
+      </trans-unit>
+      <trans-unit id="c318b230bb485d7c4f2bdec93d58e4f5">
+        <source>Last run</source>
+        <target>Dernière exécution</target>
+      </trans-unit>
+      <trans-unit id="9d84f32cb83519a061b3618587efb192">
+        <source>Last run:</source>
+        <target>Dernière exécution :</target>
+      </trans-unit>
+      <trans-unit id="8b0807a79d36ca9fece2ab62e26bdd9f">
+        <source>Latest events</source>
+        <target>Derniers événements</target>
+      </trans-unit>
+      <trans-unit id="c1a5a53d6608c200d9123f66575bf3c4">
+        <source>Leave empty to keep the current password.</source>
+        <target>Laissez vide pour conserver le mot de passe actuel.</target>
+      </trans-unit>
+      <trans-unit id="30af36e6fcab5a82728d0bea966173ee">
+        <source>Login (email)</source>
+        <target>Identifiant (e-mail)</target>
+      </trans-unit>
+      <trans-unit id="5e2be8e6f2935f0ee00f5c26b92e6d01">
+        <source>Most ordered products</source>
+        <target>Produits les plus commandés</target>
+      </trans-unit>
+      <trans-unit id="6a66f47f3bf71f060a5a33e51f32ae36">
+        <source>Most ordered products over the last 30 days.</source>
+        <target>Produits les plus commandés sur les 30 derniers jours.</target>
+      </trans-unit>
+      <trans-unit id="2d31a9042ca0f50dce8ae60553645e5d">
+        <source>Most viewed</source>
+        <target>Les plus consultés</target>
+      </trans-unit>
+      <trans-unit id="4065b5ad1596bc7f2ccb7da7476cae6b">
+        <source>Most viewed products</source>
+        <target>Produits les plus consultés</target>
+      </trans-unit>
+      <trans-unit id="9903c2af68dc5d8606981fe7b065234b">
+        <source>Most viewed products over the last 30 days.</source>
+        <target>Produits les plus consultés sur les 30 derniers jours.</target>
+      </trans-unit>
+      <trans-unit id="7a663de884fbb14c5896f77a99083023">
+        <source>Need help or a new account?</source>
+        <target>Besoin d'aide ou d'un nouveau compte ?</target>
+      </trans-unit>
+      <trans-unit id="54219de6322f1c51b8ada940fae8ab98">
+        <source>Never run</source>
+        <target>Jamais exécutée</target>
+      </trans-unit>
+      <trans-unit id="5d23c07d3e311b8b79f01c34c373e602">
+        <source>Never synchronised</source>
+        <target>Jamais synchronisé</target>
+      </trans-unit>
+      <trans-unit id="aacef285fadf59a1816b9f96d3ac302a">
+        <source>No activity tracked yet. Visit a product page of your shop: the first events appear here.</source>
+        <target>Aucune activité suivie pour l'instant. Consultez une fiche produit de votre boutique : les premiers événements apparaîtront ici.</target>
+      </trans-unit>
+      <trans-unit id="2ad26ed3fcd05ffc1b00fdaf4f2dacb2">
+        <source>No data yet.</source>
+        <target>Pas encore de données.</target>
+      </trans-unit>
+      <trans-unit id="d29df80cbba23d977324d1297f9817a3">
+        <source>No events yet.</source>
+        <target>Aucun événement pour l'instant.</target>
+      </trans-unit>
+      <trans-unit id="b151fb34193a4a0ae71e00013c06b1e3">
+        <source>Not imported</source>
+        <target>Non importé</target>
+      </trans-unit>
+      <trans-unit id="265cebfe72ed6d5409541ce9383ad49f">
+        <source>Open the dashboard</source>
+        <target>Ouvrir le suivi</target>
+      </trans-unit>
+      <trans-unit id="070c8095626eb15c429d28c5eaa683fd">
+        <source>Optional, once a night: full catalog synchronisation.</source>
+        <target>Facultatif, une fois par nuit : synchronisation complète du catalogue.</target>
+      </trans-unit>
+      <trans-unit id="fb077ecba55e5552916bde26d8b9e794">
+        <source>Order confirmation</source>
+        <target>Confirmation de commande</target>
+      </trans-unit>
+      <trans-unit id="782c8b38bce4f2f6975ca7f33ac8189b">
+        <source>Order history</source>
+        <target>Historique de commandes</target>
+      </trans-unit>
+      <trans-unit id="69fd4494f8d0fbf609431cd1e7fc79b8">
+        <source>Orders placed since</source>
+        <target>Commandes passées depuis le</target>
+      </trans-unit>
+      <trans-unit id="83f499a540b1323009c200d6f8cc9396">
+        <source>Parameter</source>
+        <target>Paramètre</target>
+      </trans-unit>
+      <trans-unit id="dc647eb65e6711e155375218212b3964">
+        <source>Password</source>
+        <target>Mot de passe</target>
+      </trans-unit>
+      <trans-unit id="7e7c41569457f9988aa19e25ada9a2a3">
+        <source>Past orders give Injellik a head start: "bought together" recommendations are available after the next training instead of after weeks of tracking. Customers are identified by an anonymous hash, no personal data is sent.</source>
+        <target>Les commandes passées donnent une longueur d'avance à Injellik : les recommandations « achetés ensemble » sont disponibles dès le prochain entraînement au lieu de plusieurs semaines de suivi. Les clients sont identifiés par une empreinte anonyme, aucune donnée personnelle n'est envoyée.</target>
+      </trans-unit>
+      <trans-unit id="785f339e3a2463e8e39f29a738acdf64">
+        <source>Personalised recommendations are cached for 60 seconds at most.</source>
+        <target>Les recommandations personnalisées sont mises en cache 60 secondes au maximum.</target>
+      </trans-unit>
+      <trans-unit id="53993df901f5b6818280561d33faeeb9">
+        <source>Personalized</source>
+        <target>Personnalisées</target>
+      </trans-unit>
+      <trans-unit id="7f119d6368682ee3f86a85f9890c21a3">
+        <source>Personalized product recommendations powered by the Injellik API: tracks views, carts and orders, and displays recommendation blocks on your pages.</source>
+        <target>Recommandations de produits personnalisées avec l'API Injellik : suit les consultations, paniers et commandes, et affiche des blocs de recommandations sur vos pages.</target>
+      </trans-unit>
+      <trans-unit id="c454307be707639e1c19b9e6298897da">
+        <source>Personalized selection on the home page.</source>
+        <target>Sélection personnalisée sur la page d'accueil.</target>
+      </trans-unit>
+      <trans-unit id="deb10517653c255364175796ace3553f">
+        <source>Product</source>
+        <target>Produit</target>
+      </trans-unit>
+      <trans-unit id="eb763a2e313718f33f55e1f0d84df6ee">
+        <source>Product page</source>
+        <target>Page produit</target>
+      </trans-unit>
+      <trans-unit id="068f80c7519d0528fb08e82137a72131">
+        <source>Products</source>
+        <target>Produits</target>
+      </trans-unit>
+      <trans-unit id="dcfb735238bc3f6b48f4b59366abc300">
+        <source>Products are synchronised automatically when they are saved. Run a full synchronisation after a large import or a price update.</source>
+        <target>Les produits sont synchronisés automatiquement à chaque enregistrement. Lancez une synchronisation complète après un import important ou une mise à jour des prix.</target>
+      </trans-unit>
+      <trans-unit id="776f3ee4343619f8f733752b154eb8d8">
+        <source>Products ordered with the current product(s).</source>
+        <target>Produits commandés avec le ou les produits courants.</target>
+      </trans-unit>
+      <trans-unit id="b50c1ef6f4a426a71bf3646c06dd9925">
+        <source>Products viewed in the same sessions as the current product(s).</source>
+        <target>Produits consultés dans les mêmes sessions que le ou les produits courants.</target>
+      </trans-unit>
+      <trans-unit id="7609fc7dc67eac5a00414bcc51727ab6">
+        <source>Products with close categories, brand and price.</source>
+        <target>Produits de catégories, marque et prix proches.</target>
+      </trans-unit>
+      <trans-unit id="e456ce685fc31ab7b53da5018796b624">
+        <source>Recent problems</source>
+        <target>Problèmes récents</target>
+      </trans-unit>
+      <trans-unit id="f80d3b79ab5d8e158cb6f063031d7319">
+        <source>Recommend the right products to each visitor</source>
+        <target>Recommandez les bons produits à chaque visiteur</target>
+      </trans-unit>
+      <trans-unit id="2b41b93b23913aae356d46b96ed62e6b">
+        <source>Recommendation blocks</source>
+        <target>Blocs de recommandations</target>
+      </trans-unit>
+      <trans-unit id="d29494ad358b00cbb93c973c615dde74">
+        <source>Recommendation cache</source>
+        <target>Cache des recommandations</target>
+      </trans-unit>
+      <trans-unit id="637f77e34c5b3c3ebcef60278700b248">
+        <source>Recommended: schedule the cron task</source>
+        <target>Recommandé : planifiez la tâche cron</target>
+      </trans-unit>
+      <trans-unit id="e06eeef1498c64bc9f54b561f7505f3d">
+        <source>Request an account</source>
+        <target>Demander un compte</target>
+      </trans-unit>
+      <trans-unit id="dbe3883a67b76de1ffdb6794815a4e56">
+        <source>Restart from the first order</source>
+        <target>Recommencer depuis la première commande</target>
+      </trans-unit>
+      <trans-unit id="5056552f7996c5beb1e3a6316b813bcc">
+        <source>Retry the events in error</source>
+        <target>Renvoyer les événements en erreur</target>
+      </trans-unit>
+      <trans-unit id="fc41a708ec932b7cc8ac0a522757e52e">
+        <source>Run the setup assistant again</source>
+        <target>Relancer l'assistant de configuration</target>
+      </trans-unit>
+      <trans-unit id="c9cc8cce247e49bae79f15173ce97354">
+        <source>Save</source>
+        <target>Enregistrer</target>
+      </trans-unit>
+      <trans-unit id="94f2c576c7f5c02deb40339f30ccf102">
+        <source>Save and finish</source>
+        <target>Enregistrer et terminer</target>
+      </trans-unit>
+      <trans-unit id="3e5d35c8ecbe79956d9829e3cf08e9d3">
+        <source>Schedule this URL every 5 to 15 minutes. It sends the events that could not be sent immediately, retries the failures and purges the events older than 30 days.</source>
+        <target>Planifiez cette URL toutes les 5 à 15 minutes. Elle envoie les événements qui n'ont pas pu partir immédiatement, renvoie les échecs et purge les événements de plus de 30 jours.</target>
+      </trans-unit>
+      <trans-unit id="f4788cbfdd29e14417053fc03d28cf15">
+        <source>Selected for you</source>
+        <target>Sélectionnés pour vous</target>
+      </trans-unit>
+      <trans-unit id="bd754b777dfdc0366d8682adc81d823d">
+        <source>Send the pending events</source>
+        <target>Envoyer les événements en attente</target>
+      </trans-unit>
+      <trans-unit id="f6f3dd7ff668f3a1a78f51a0ca4a5dd8">
+        <source>Sending of events</source>
+        <target>Envoi des événements</target>
+      </trans-unit>
+      <trans-unit id="08e55bd2413b4fcbd71fcf23c2358804">
+        <source>Sent at the end of each request</source>
+        <target>Envoyés à la fin de chaque requête</target>
+      </trans-unit>
+      <trans-unit id="26c9a161326b8d9320aa381474793bb2">
+        <source>Sent by the cron task</source>
+        <target>Envoyés par la tâche cron</target>
+      </trans-unit>
+      <trans-unit id="d51fc7b11d900655232049f706bdfd3d">
+        <source>Show nothing more</source>
+        <target>Ne rien afficher de plus</target>
+      </trans-unit>
+      <trans-unit id="f1cc4aaa3a819956844e508917e6f80b">
+        <source>Similar products</source>
+        <target>Produits similaires</target>
+      </trans-unit>
+      <trans-unit id="1116ed9b82405b666479000dcc482f84">
+        <source>Skip this step</source>
+        <target>Passer cette étape</target>
+      </trans-unit>
+      <trans-unit id="a9f8b565aba07696d6a1199702de23c6">
+        <source>Source product id, or several ids separated by commas (default: current product or cart)</source>
+        <target>Identifiant du produit source, ou plusieurs identifiants séparés par des virgules (par défaut : produit courant ou panier)</target>
+      </trans-unit>
+      <trans-unit id="a6122a65eaa676f700ae68d393054a37">
+        <source>Start</source>
+        <target>Commencer</target>
+      </trans-unit>
+      <trans-unit id="ec53a8c4f07baed5d8825072c89799be">
+        <source>Status</source>
+        <target>Statut</target>
+      </trans-unit>
+      <trans-unit id="83de191c12c3c109006c4593128d8bb6">
+        <source>Strategy</source>
+        <target>Stratégie</target>
+      </trans-unit>
+      <trans-unit id="c8998795cf5d01d1b8d3f1d4f321dda1">
+        <source>Synchronise</source>
+        <target>Synchroniser</target>
+      </trans-unit>
+      <trans-unit id="b1f4d2f963a68226e3e016353c7cd853">
+        <source>Synchronise again</source>
+        <target>Synchroniser à nouveau</target>
+      </trans-unit>
+      <trans-unit id="6b6a81ce059c0bb1b1a860fbf02927fa">
+        <source>Synchronise products automatically when they are saved</source>
+        <target>Synchroniser automatiquement les produits à leur enregistrement</target>
+      </trans-unit>
+      <trans-unit id="444ca7659a1bfe4d87411726cc6d0607">
+        <source>Synchronise the catalog</source>
+        <target>Synchroniser le catalogue</target>
+      </trans-unit>
+      <trans-unit id="78d12ce2cfc3b09f2acdf2d04ec6b4a5">
+        <source>Synchronise your catalog</source>
+        <target>Synchronisez votre catalogue</target>
+      </trans-unit>
+      <trans-unit id="e6a7254dc4a3e1b6b579c73850fa6b10">
+        <source>Synchronised on</source>
+        <target>Synchronisé le</target>
+      </trans-unit>
+      <trans-unit id="660fc9e01f52fb7f8a715e51167c4f8d">
+        <source>Test the connection</source>
+        <target>Tester la connexion</target>
+      </trans-unit>
+      <trans-unit id="9d770c909c2c69b09eae2372c4cf405d">
+        <source>Testing...</source>
+        <target>Test en cours…</target>
+      </trans-unit>
+      <trans-unit id="16127027d66748f104a53bbe6d29e508">
+        <source>Text displayed above the products</source>
+        <target>Texte affiché au-dessus des produits</target>
+      </trans-unit>
+      <trans-unit id="78ed7c8714ad7dda735e61352199bd8a">
+        <source>The API URL is not valid.</source>
+        <target>L'URL de l'API n'est pas valide.</target>
+      </trans-unit>
+      <trans-unit id="1b35f7d3c912135311e6ffd851024f67">
+        <source>The API cannot be reached: %s</source>
+        <target>L'API est injoignable : %s</target>
+      </trans-unit>
+      <trans-unit id="71eefc5a23d2de13df7e9cb61fbeb5d4">
+        <source>The API rejected the login or the password.</source>
+        <target>L'API a refusé l'identifiant ou le mot de passe.</target>
+      </trans-unit>
+      <trans-unit id="8090c38cb7f6511f1b06cd87073f0b23">
+        <source>The blocks are loaded after the page (compatible with full page caches). The JavaScript event "injellik:loaded" is dispatched on document when a block is inserted.</source>
+        <target>Les blocs sont chargés après la page (compatible avec les caches de page complète). L'événement JavaScript « injellik:loaded » est émis sur document à l'insertion d'un bloc.</target>
+      </trans-unit>
+      <trans-unit id="46a9ab1486fc168bd308d483b992f183">
+        <source>The blocks of the "Blocks" tab are displayed on the standard hooks of your theme. To place a block elsewhere, use one of these methods.</source>
+        <target>Les blocs de l'onglet « Blocs » s'affichent sur les hooks standard de votre thème. Pour placer un bloc ailleurs, utilisez l'une de ces méthodes.</target>
+      </trans-unit>
+      <trans-unit id="73c2ab0327d9fbd3306fc01ff58f8ba2">
+        <source>The cron task has never run.</source>
+        <target>La tâche cron n'a jamais été exécutée.</target>
+      </trans-unit>
+      <trans-unit id="7403b84c2ab98a3ca64a19a891cf4c62">
+        <source>The current cron URL will stop working. Continue?</source>
+        <target>L'URL cron actuelle cessera de fonctionner. Continuer ?</target>
+      </trans-unit>
+      <trans-unit id="14d2e4412cbb88177ec9eac29847d65b">
+        <source>The import resumes where it stopped: new orders are tracked live, so it is only needed once.</source>
+        <target>L'import reprend là où il s'est arrêté : les nouvelles commandes sont suivies en direct, il n'est donc nécessaire qu'une fois.</target>
+      </trans-unit>
+      <trans-unit id="41db429c7f20cabdf30f9013b6ac3ad4">
+        <source>The login and the password are required.</source>
+        <target>L'identifiant et le mot de passe sont obligatoires.</target>
+      </trans-unit>
+      <trans-unit id="a5f4b90f62dc8702fcf8738bcca13147">
+        <source>The next import will send all the orders again. Continue?</source>
+        <target>Le prochain import renverra toutes les commandes. Continuer ?</target>
+      </trans-unit>
+      <trans-unit id="9e2036a8b216dcb031bdeea9163c5fce">
+        <source>The source products are the current product on product pages, the cart content on the cart page and the ordered products on the confirmation page. Strategies based on products fall back when there is no product.</source>
+        <target>Les produits sources sont le produit courant sur les fiches produit, le contenu du panier sur la page panier et les produits commandés sur la page de confirmation. Les stratégies basées sur des produits passent au repli lorsqu'il n'y a pas de produit.</target>
+      </trans-unit>
+      <trans-unit id="b78a3223503896721cca1303f776159b">
+        <source>Title</source>
+        <target>Titre</target>
+      </trans-unit>
+      <trans-unit id="2d199e861c30e375fd252d9ef6239e90">
+        <source>Tracked activity</source>
+        <target>Activité suivie</target>
+      </trans-unit>
+      <trans-unit id="816985fd7250933d3fb5583c6b011257">
+        <source>Tracking is active. Recommendations based on behaviour appear after the next nightly training; until then the blocks use the fallback strategy.</source>
+        <target>Le suivi est actif. Les recommandations basées sur le comportement apparaissent après le prochain entraînement nocturne ; d'ici là, les blocs utilisent la stratégie de repli.</target>
+      </trans-unit>
+      <trans-unit id="453e6aa38d87b28ccae545967c53004f">
+        <source>Unavailable</source>
+        <target>Indisponible</target>
+      </trans-unit>
+      <trans-unit id="5ff3c6978f87d96febfdc8ed3899a97e">
+        <source>Unchanged</source>
+        <target>Inchangé</target>
+      </trans-unit>
+      <trans-unit id="c82a6100dace2b41087ba6cf99a5976a">
+        <source>Values</source>
+        <target>Valeurs</target>
+      </trans-unit>
+      <trans-unit id="82f0bb36569281b5231815649eba56fa">
+        <source>Viewed together</source>
+        <target>Consultés ensemble</target>
+      </trans-unit>
+      <trans-unit id="f9627d311987c7458b75f3153ab6caa9">
+        <source>Views, carts and orders are recorded in your shop and sent to Injellik in the background. Your pages are never slowed down, even if the API is unavailable.</source>
+        <target>Les consultations, paniers et commandes sont enregistrés dans votre boutique et envoyés à Injellik en arrière-plan. Vos pages ne sont jamais ralenties, même si l'API est indisponible.</target>
+      </trans-unit>
+      <trans-unit id="c9fb01bb38360f1f3f595b7ccf3d3abe">
+        <source>Visitor</source>
+        <target>Visiteur</target>
+      </trans-unit>
+      <trans-unit id="83218ac34c1834c26781fe4bde918ee4">
+        <source>Welcome</source>
+        <target>Bienvenue</target>
+      </trans-unit>
+      <trans-unit id="1f91c05bc9dac0a5dfb7a376a454e841">
+        <source>What customers with similar purchases also bought.</source>
+        <target>Ce que les clients aux achats similaires ont aussi acheté.</target>
+      </trans-unit>
+      <trans-unit id="be7d121cc90ef1ac91cc58a1c2dc09ae">
+        <source>Widget and other hooks</source>
+        <target>Widget et autres hooks</target>
+      </trans-unit>
+      <trans-unit id="39c59cbdf4dd6c43b1628885d1269dce">
+        <source>You are editing the settings of all shops. Select a shop in the multistore menu to configure it separately: each shop can use its own Injellik account.</source>
+        <target>Vous modifiez les réglages de toutes les boutiques. Sélectionnez une boutique dans le menu multiboutique pour la configurer séparément : chaque boutique peut utiliser son propre compte Injellik.</target>
+      </trans-unit>
+      <trans-unit id="124117dd22bc1dce2b0687b65f35f091">
+        <source>You may also like</source>
+        <target>Vous aimerez aussi</target>
+      </trans-unit>
+      <trans-unit id="22ff412a1cc988c227221a2744c06e40">
+        <source>You need an Injellik account (API URL, login and password).</source>
+        <target>Vous avez besoin d'un compte Injellik (URL de l'API, identifiant et mot de passe).</target>
+      </trans-unit>
+      <trans-unit id="43ce2c9a2d9840aa9ed285c553b51c24">
+        <source>Your products (name, price, categories, brand) are sent to Injellik so that it can recommend them and compute similar products. Later changes are synchronised automatically.</source>
+        <target>Vos produits (nom, prix, catégories, marque) sont envoyés à Injellik pour qu'il puisse les recommander et calculer les produits similaires. Les modifications ultérieures sont synchronisées automatiquement.</target>
+      </trans-unit>
+      <trans-unit id="44fdec47036f482b68b748f9d786801b">
+        <source>days</source>
+        <target>jours</target>
+      </trans-unit>
+      <trans-unit id="075ae3d2fc31640504f814f60e5ef713">
+        <source>disabled</source>
+        <target>désactivé</target>
+      </trans-unit>
+      <trans-unit id="cb5e100e5a9a3e7f6d1fd97512215282">
+        <source>error</source>
+        <target>erreur</target>
+      </trans-unit>
+      <trans-unit id="359e915274c1017adf21ad133b50f60c">
+        <source>in error</source>
+        <target>en erreur</target>
+      </trans-unit>
+      <trans-unit id="6696ab54028ba33cf39d21da0e6d69bb">
+        <source>last synchronisation:</source>
+        <target>dernière synchronisation :</target>
+      </trans-unit>
+      <trans-unit id="12c500ed0b7879105fb46af0f246be87">
+        <source>orders</source>
+        <target>commandes</target>
+      </trans-unit>
+      <trans-unit id="2e6cd20d102195fa472a3fe386cafffb">
+        <source>orders not imported yet</source>
+        <target>commandes pas encore importées</target>
+      </trans-unit>
+      <trans-unit id="7c6c2e5d48ab37a007cbf70d3ea25fa4">
+        <source>pending</source>
+        <target>en attente</target>
+      </trans-unit>
+      <trans-unit id="86024cad1e83101d97359d7351051156">
+        <source>products</source>
+        <target>produits</target>
+      </trans-unit>
+      <trans-unit id="08fa8f8eef51796dcd8bfca0b23539d3">
+        <source>products in this shop</source>
+        <target>produits dans cette boutique</target>
+      </trans-unit>
+      <trans-unit id="789183b7e98646c11d5f0544c8f3c4c9">
+        <source>sent</source>
+        <target>envoyés</target>
+      </trans-unit>
+      <trans-unit id="a4f33a7044eb240156298dbeabcee458">
+        <source>valid orders in total</source>
+        <target>commandes valides au total</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

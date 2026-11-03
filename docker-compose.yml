@@ -1,51 +1,53 @@
-version: '3.3'
+# Development shop with the module mounted.
+#
+#   docker compose up -d                      # PrestaShop 8.2 on http://localhost:8090 (admin: /admin-dev)
+#   PS_VERSION=9.0 docker compose up -d       # another PrestaShop version (fresh volumes: docker compose down -v)
+#
+# Back office: demo@prestashop.com / prestashop_demo
+# From the containers, an API running on the host is reachable at http://host.docker.internal:<port>
+name: injellik-prestashop
 
 services:
-  mysql:
-    image: mysql:5.7
+  db:
+    image: mariadb:10.11
     environment:
-      MYSQL_DATABASE: prestashop_db
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: prestashop_user
-      MYSQL_PASSWORD: prestashop_password
+      MARIADB_ROOT_PASSWORD: prestashop
+      MARIADB_DATABASE: prestashop
     volumes:
-      - dbdata:/var/lib/mysql
-    networks:
-      - prestashop_network
-    logging:
-      driver: json-file
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
 
   prestashop:
-    image: prestashop/prestashop:latest
+    image: prestashop/prestashop:${PS_VERSION:-8.2}-apache
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
-      ADMIN_MAIL: admin@example.com
-      ADMIN_PASSWD: admin_password
-      DB_NAME: prestashop_db
-      DB_PASSWD: prestashop_password
-      DB_PREFIX: ps_
-      DB_SERVER: mysql
-      DB_USER: prestashop_user
-      PS_DOMAIN: localhost
-      PS_ENABLE_SSL: '0'  # SSL désactivé pour le localhost
-      PS_FOLDER_ADMIN: admin
-      PS_FOLDER_INSTALL: install
-      PS_INSTALL_AUTO: '1'
+      DB_SERVER: db
+      DB_NAME: prestashop
+      DB_USER: root
+      DB_PASSWD: prestashop
+      PS_INSTALL_AUTO: 1
+      PS_DOMAIN: localhost:${PS_PORT:-8090}
+      PS_FOLDER_ADMIN: admin-dev
+      PS_FOLDER_INSTALL: install-dev
       PS_LANGUAGE: fr
+      PS_COUNTRY: FR
+      PS_DEV_MODE: 1
+      ADMIN_MAIL: demo@prestashop.com
+      ADMIN_PASSWD: prestashop_demo
     ports:
-      - "80:80"  # Port local pour accéder à PrestaShop
+      - "${PS_PORT:-8090}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
-      - psdata:/var/www/html
-    networks:
-      - prestashop_network
-    logging:
-      driver: json-file
-
-networks:
-  prestashop_network:
-    driver: bridge
+      - shop:/var/www/html
+      - ./injellikrecommendations:/var/www/html/modules/injellikrecommendations
 
 volumes:
-  dbdata:
-    driver: local
-  psdata:
-    driver: local
+  db:
+  shop:

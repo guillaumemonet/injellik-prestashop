@@ -1,0 +1,11 @@
+/**
+ * Injellik Recommendations for PrestaShop.
+ * The blocks use the theme product listing; only the placeholder needs a style.
+ */
+.injellik-reco-placeholder {
+  min-height: 1px;
+}
+
+.injellik-reco {
+  margin-top: 2rem;
+}
