@@ -262,13 +262,13 @@
         <source>Done</source>
         <target>Terminé</target>
       </trans-unit>
+      <trans-unit id="519a4411a5ca4be11a71a9514f7e3db9">
+        <source>Each shop has its own key, displayed in your web-nest.fr account once you have subscribed.</source>
+        <target>Chaque boutique a sa propre clé, affichée dans votre compte web-nest.fr après la souscription.</target>
+      </trans-unit>
       <trans-unit id="4727b6d2a257ec248d76d60576b5e4e5">
         <source>Enable the blocks you want. Each block uses a strategy, and a fallback strategy while Injellik is still learning. You can change everything later.</source>
         <target>Activez les blocs souhaités. Chaque bloc utilise une stratégie, et une stratégie de repli tant qu'Injellik apprend encore. Tout est modifiable par la suite.</target>
-      </trans-unit>
-      <trans-unit id="34b3157de559ca35638f66835a643ac1">
-        <source>Enter the credentials of your Injellik API account. They are stored in your shop configuration and only used by the server.</source>
-        <target>Saisissez les identifiants de votre compte API Injellik. Ils sont stockés dans la configuration de votre boutique et utilisés uniquement côté serveur.</target>
       </trans-unit>
       <trans-unit id="4233a3f9f3e7932af2aa85b60811ecfb">
         <source>Event queue</source>
@@ -290,6 +290,10 @@
         <source>Every night, Injellik computes which products are viewed and bought together and which products are similar.</source>
         <target>Chaque nuit, Injellik calcule quels produits sont consultés et achetés ensemble, et quels produits se ressemblent.</target>
       </trans-unit>
+      <trans-unit id="52f025a91c955309557ce516097e0c19">
+        <source>Find my key</source>
+        <target>Retrouver ma clé</target>
+      </trans-unit>
       <trans-unit id="4a32807b8672bc14fc765689533c948d">
         <source>Frequently bought together</source>
         <target>Souvent achetés ensemble</target>
@@ -297,6 +301,10 @@
       <trans-unit id="61f7a1d7a9496d2d8fb3df21d20afe1a">
         <source>Generate a new token</source>
         <target>Générer un nouveau jeton</target>
+      </trans-unit>
+      <trans-unit id="080e1ca54343ba2e0fe07e78e26e0a11">
+        <source>Get a key</source>
+        <target>Obtenir une clé</target>
       </trans-unit>
       <trans-unit id="cb59b87e00d11222bfd9159d0d23836f">
         <source>Getting started</source>
@@ -354,9 +362,17 @@
         <source>Integration</source>
         <target>Intégration</target>
       </trans-unit>
+      <trans-unit id="ec867c7eaad19cb65b82c75e9a88925a">
+        <source>Invalid or revoked licence key.</source>
+        <target>Clé de licence invalide ou révoquée.</target>
+      </trans-unit>
       <trans-unit id="98054d1d81c05ddf432c741f0a6bc246">
         <source>It retries the events that could not be sent and cleans the old ones. The URL is on the configuration page.</source>
         <target>Elle renvoie les événements qui n'ont pas pu être envoyés et supprime les anciens. L'URL figure sur la page de configuration.</target>
+      </trans-unit>
+      <trans-unit id="f89ecc67bb033d2cdf4bb31d18c73e31">
+        <source>Keep the default address (%url%) unless Web-Nest asks you to change it.</source>
+        <target>Conservez l'adresse par défaut (%url%), sauf si Web-Nest vous demande de la modifier.</target>
       </trans-unit>
       <trans-unit id="92de805ae582ce6049f832471539737c">
         <source>Last error</source>
@@ -386,13 +402,25 @@
         <source>Latest events</source>
         <target>Derniers événements</target>
       </trans-unit>
+      <trans-unit id="8b70f63dd1febae1cbf09dca83429b74">
+        <source>Leave empty to keep the current key.</source>
+        <target>Laissez vide pour conserver la clé actuelle.</target>
+      </trans-unit>
       <trans-unit id="c1a5a53d6608c200d9123f66575bf3c4">
         <source>Leave empty to keep the current password.</source>
         <target>Laissez vide pour conserver le mot de passe actuel.</target>
       </trans-unit>
+      <trans-unit id="97c1e7953cb48d712a6c6312c0b6d86d">
+        <source>Licence key</source>
+        <target>Clé de licence</target>
+      </trans-unit>
       <trans-unit id="30af36e6fcab5a82728d0bea966173ee">
         <source>Login (email)</source>
         <target>Identifiant (e-mail)</target>
+      </trans-unit>
+      <trans-unit id="604fa3ff3a52c8fecdcbd22dd451b89e">
+        <source>Manage my subscription</source>
+        <target>Gérer mon abonnement</target>
       </trans-unit>
       <trans-unit id="5e2be8e6f2935f0ee00f5c26b92e6d01">
         <source>Most ordered products</source>
@@ -474,6 +502,10 @@
         <source>Past orders give Injellik a head start: "bought together" recommendations are available after the next training instead of after weeks of tracking. Customers are identified by an anonymous hash, no personal data is sent.</source>
         <target>Les commandes passées donnent une longueur d'avance à Injellik : les recommandations « achetés ensemble » sont disponibles dès le prochain entraînement au lieu de plusieurs semaines de suivi. Les clients sont identifiés par une empreinte anonyme, aucune donnée personnelle n'est envoyée.</target>
       </trans-unit>
+      <trans-unit id="cd2b40d5fcd7e31496a6cdb3dcd53ae3">
+        <source>Paste the licence key of this shop. It is stored in your shop configuration and only used by the server.</source>
+        <target>Collez la clé de licence de cette boutique. Elle est enregistrée dans la configuration de la boutique et utilisée uniquement par le serveur.</target>
+      </trans-unit>
       <trans-unit id="785f339e3a2463e8e39f29a738acdf64">
         <source>Personalised recommendations are cached for 60 seconds at most.</source>
         <target>Les recommandations personnalisées sont mises en cache 60 secondes au maximum.</target>
@@ -537,10 +569,6 @@
       <trans-unit id="637f77e34c5b3c3ebcef60278700b248">
         <source>Recommended: schedule the cron task</source>
         <target>Recommandé : planifiez la tâche cron</target>
-      </trans-unit>
-      <trans-unit id="e06eeef1498c64bc9f54b561f7505f3d">
-        <source>Request an account</source>
-        <target>Demander un compte</target>
       </trans-unit>
       <trans-unit id="dbe3883a67b76de1ffdb6794815a4e56">
         <source>Restart from the first order</source>
@@ -682,6 +710,10 @@
         <source>The import resumes where it stopped: new orders are tracked live, so it is only needed once.</source>
         <target>L'import reprend là où il s'est arrêté : les nouvelles commandes sont suivies en direct, il n'est donc nécessaire qu'une fois.</target>
       </trans-unit>
+      <trans-unit id="6b007aec56fe8fe23449af4c10a13c46">
+        <source>The licence key is required.</source>
+        <target>La clé de licence est obligatoire.</target>
+      </trans-unit>
       <trans-unit id="41db429c7f20cabdf30f9013b6ac3ad4">
         <source>The login and the password are required.</source>
         <target>L'identifiant et le mot de passe sont obligatoires.</target>
@@ -690,9 +722,21 @@
         <source>The next import will send all the orders again. Continue?</source>
         <target>Le prochain import renverra toutes les commandes. Continuer ?</target>
       </trans-unit>
+      <trans-unit id="be5309c024924108696502dcbbb06c6e">
+        <source>The recommendation blocks are hidden and the events are kept in your shop: they will be sent as soon as the subscription is active again.</source>
+        <target>Les blocs de recommandations sont masqués et les événements sont conservés dans votre boutique : ils seront envoyés dès que l'abonnement sera de nouveau actif.</target>
+      </trans-unit>
+      <trans-unit id="16daf261a4474ac0a80618b81bbae807">
+        <source>The recommendation blocks are hidden until a valid key is saved in the Connection tab.</source>
+        <target>Les blocs de recommandations sont masqués jusqu'à l'enregistrement d'une clé valide dans l'onglet Connexion.</target>
+      </trans-unit>
       <trans-unit id="9e2036a8b216dcb031bdeea9163c5fce">
         <source>The source products are the current product on product pages, the cart content on the cart page and the ordered products on the confirmation page. Strategies based on products fall back when there is no product.</source>
         <target>Les produits sources sont le produit courant sur les fiches produit, le contenu du panier sur la page panier et les produits commandés sur la page de confirmation. Les stratégies basées sur des produits passent au repli lorsqu'il n'y a pas de produit.</target>
+      </trans-unit>
+      <trans-unit id="352439307fb0dfc91796aa9f995a0f63">
+        <source>This licence key is not valid: it starts with "ijk_lic_", followed by 40 characters (digits and letters a to f). Copy it again from your web-nest.fr account.</source>
+        <target>Cette clé de licence n'est pas valide : elle commence par « ijk_lic_ », suivi de 40 caractères (chiffres et lettres de a à f). Copiez-la de nouveau depuis votre compte web-nest.fr.</target>
       </trans-unit>
       <trans-unit id="b78a3223503896721cca1303f776159b">
         <source>Title</source>
@@ -713,6 +757,14 @@
       <trans-unit id="5ff3c6978f87d96febfdc8ed3899a97e">
         <source>Unchanged</source>
         <target>Inchangé</target>
+      </trans-unit>
+      <trans-unit id="f5f735c5565255260325b9f3a8467c14">
+        <source>Use a licence key</source>
+        <target>Utiliser une clé de licence</target>
+      </trans-unit>
+      <trans-unit id="17187d9e22e5f5054ff8e991b9d70975">
+        <source>Use an API login</source>
+        <target>Utiliser un identifiant API</target>
       </trans-unit>
       <trans-unit id="c82a6100dace2b41087ba6cf99a5976a">
         <source>Values</source>
@@ -750,9 +802,13 @@
         <source>You may also like</source>
         <target>Vous aimerez aussi</target>
       </trans-unit>
-      <trans-unit id="22ff412a1cc988c227221a2744c06e40">
-        <source>You need an Injellik account (API URL, login and password).</source>
-        <target>Vous avez besoin d'un compte Injellik (URL de l'API, identifiant et mot de passe).</target>
+      <trans-unit id="67caaac04fa44f7a973ba06433ddf781">
+        <source>You need an Injellik licence key, provided with a subscription on web-nest.fr.</source>
+        <target>Il vous faut une clé de licence Injellik, fournie avec un abonnement sur web-nest.fr.</target>
+      </trans-unit>
+      <trans-unit id="012227d1718706d916bcd3cc7aab0ab0">
+        <source>Your Injellik subscription is suspended.</source>
+        <target>Votre abonnement Injellik est suspendu.</target>
       </trans-unit>
       <trans-unit id="43ce2c9a2d9840aa9ed285c553b51c24">
         <source>Your products (name, price, categories, brand) are sent to Injellik so that it can recommend them and compute similar products. Later changes are synchronised automatically.</source>
@@ -801,6 +857,10 @@
       <trans-unit id="789183b7e98646c11d5f0544c8f3c4c9">
         <source>sent</source>
         <target>envoyés</target>
+      </trans-unit>
+      <trans-unit id="a13b9f8f9e475cea38d28025dbb21398">
+        <source>since %date%</source>
+        <target>depuis le %date%</target>
       </trans-unit>
       <trans-unit id="a4f33a7044eb240156298dbeabcee458">
         <source>valid orders in total</source>
