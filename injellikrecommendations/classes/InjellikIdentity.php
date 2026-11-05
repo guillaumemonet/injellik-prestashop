@@ -25,7 +25,7 @@ class InjellikIdentity
     const COOKIE_SEEN = 'injellik_seen';
     const SESSION_IDLE = 1800;
 
-    public static function userUuid(Context $context = null)
+    public static function userUuid(?Context $context = null)
     {
         $context = $context ?: Context::getContext();
         if ($context->customer && $context->customer->id && $context->customer->isLogged()) {
@@ -50,7 +50,7 @@ class InjellikIdentity
         return 'c-' . Tools::substr(hash('sha256', _COOKIE_KEY_ . '|customer|' . (int) $idCustomer), 0, 32);
     }
 
-    public static function sessionUuid(Context $context = null)
+    public static function sessionUuid(?Context $context = null)
     {
         $context = $context ?: Context::getContext();
         $cookie = $context->cookie;
@@ -69,7 +69,7 @@ class InjellikIdentity
      * True when the current request comes from a visitor whose browsing session is known
      * (false for a payment notification sent by a server, a back-office order...).
      */
-    public static function hasSession(Context $context = null)
+    public static function hasSession(?Context $context = null)
     {
         $context = $context ?: Context::getContext();
 
@@ -79,7 +79,7 @@ class InjellikIdentity
     /**
      * Creates the identifiers and extends the session. Call it before any output so that the cookie can be sent.
      */
-    public static function touch(Context $context = null)
+    public static function touch(?Context $context = null)
     {
         $context = $context ?: Context::getContext();
         self::userUuid($context);
@@ -92,7 +92,7 @@ class InjellikIdentity
     /**
      * Starts a new session (after an order: the next purchases belong to another basket).
      */
-    public static function resetSession(Context $context = null)
+    public static function resetSession(?Context $context = null)
     {
         $context = $context ?: Context::getContext();
         self::write($context, [self::COOKIE_SESSION => 's-' . self::uuid(), self::COOKIE_SEEN => time()]);

@@ -32,7 +32,7 @@ class InjellikRecommender
     /** @var Module */
     private $module;
 
-    public function __construct(Module $module, Context $context = null)
+    public function __construct(Module $module, ?Context $context = null)
     {
         $this->module = $module;
         $this->context = $context ?: Context::getContext();
