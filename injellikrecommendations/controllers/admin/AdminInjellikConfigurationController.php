@@ -212,6 +212,7 @@ class AdminInjellikConfigurationController extends ModuleAdminController
         }
         InjellikConfig::savePlacements($placements);
         InjellikCache::clear();
+        InjellikConfig::allowApiRetry((int) $this->context->shop->id);
 
         if (Tools::getValue('onboarding')) {
             InjellikConfig::set(InjellikConfig::ONBOARDED, 1);
@@ -243,6 +244,8 @@ class AdminInjellikConfigurationController extends ModuleAdminController
         InjellikConfig::set(InjellikConfig::EXCLUDE_BOTS, (int) (bool) Tools::getValue('exclude_bots'));
         InjellikConfig::set(InjellikConfig::AUTO_SYNC, (int) (bool) Tools::getValue('auto_sync'));
         InjellikCache::clear();
+        // Saving the configuration is also a new attempt for a shop the API refused.
+        InjellikConfig::allowApiRetry((int) $this->context->shop->id);
 
         Tools::redirectAdmin($this->url(['conf' => 4]) . '#injellik-advanced');
     }
@@ -334,8 +337,7 @@ class AdminInjellikConfigurationController extends ModuleAdminController
         try {
             $batch = InjellikSync::syncCatalogBatch($idShop, (int) Configuration::get('PS_LANG_DEFAULT'), $afterId);
         } catch (InjellikApiException $e) {
-            InjellikConfig::recordError($e->getMessage(), $idShop);
-            $this->json(['ok' => false, 'message' => $e->getMessage()]);
+            $this->jobFailed($e, $idShop);
         }
 
         $done += $batch['processed'];
@@ -369,8 +371,7 @@ class AdminInjellikConfigurationController extends ModuleAdminController
         try {
             $batch = InjellikSync::importOrdersBatch($idShop, $afterId, $since);
         } catch (InjellikApiException $e) {
-            InjellikConfig::recordError($e->getMessage(), $idShop);
-            $this->json(['ok' => false, 'message' => $e->getMessage()]);
+            $this->jobFailed($e, $idShop);
         }
 
         $doneCount += $batch['processed'];
@@ -389,6 +390,17 @@ class AdminInjellikConfigurationController extends ModuleAdminController
                 ? $this->trans('%d orders imported.', [$doneCount], InjellikConfig::DOMAIN_ADMIN)
                 : $this->trans('%d / %d orders', [$doneCount, $total], InjellikConfig::DOMAIN_ADMIN),
         ]);
+    }
+
+    /**
+     * Ends a batched job with the error of the API (the refusals of the API are shown by the page banner).
+     */
+    private function jobFailed(InjellikApiException $e, $idShop)
+    {
+        if (!$e->isAccessDenied()) {
+            InjellikConfig::recordError($e->getMessage(), $idShop);
+        }
+        $this->json(['ok' => false, 'message' => InjellikConfig::apiErrorMessage($e, $this->context->getTranslator())]);
     }
 
     private function json(array $data)
@@ -475,11 +487,8 @@ class AdminInjellikConfigurationController extends ModuleAdminController
                 'has_password' => (bool) InjellikConfig::get(InjellikConfig::API_PASSWORD),
                 'configured' => InjellikConfig::isConfigured(),
             ],
-            'links' => [
-                'pricing' => InjellikConfig::PRICING_URL,
-                'shops' => InjellikConfig::ACCOUNT_SHOPS_URL,
-                'subscription' => InjellikConfig::SUBSCRIPTION_URL,
-            ],
+            'links' => InjellikConfig::links(),
+            'api_state' => InjellikConfig::apiState((int) $this->context->shop->id),
             'placements' => $this->placementsForForm(),
             'strategies' => $this->strategyLabels(),
             'languages' => Language::getLanguages(false),

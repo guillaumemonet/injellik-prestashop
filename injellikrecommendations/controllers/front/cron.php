@@ -39,7 +39,8 @@ class InjellikrecommendationsCronModuleFrontController extends ModuleFrontContro
 
         try {
             if (Tools::getValue('task') === 'catalog') {
-                $report['catalog'] = $this->syncCatalog($idShop);
+                // While the API refuses the shop, the synchronisation waits for the next run.
+                $report['catalog'] = InjellikConfig::isApiBlocked($idShop) ? null : $this->syncCatalog($idShop);
             } else {
                 $report['events'] = InjellikEventQueue::flush($idShop, 2000);
                 $report['purged'] = (int) InjellikEventQueue::purge(30);
@@ -47,9 +48,16 @@ class InjellikrecommendationsCronModuleFrontController extends ModuleFrontContro
             }
             InjellikConfig::set(InjellikConfig::LAST_CRON, date('Y-m-d H:i:s'), $idShop);
         } catch (Exception $e) {
-            InjellikConfig::recordError($e->getMessage(), $idShop);
-            http_response_code(502);
-            $report['error'] = $e->getMessage();
+            if (!$e instanceof InjellikApiException || !$e->isAccessDenied()) {
+                InjellikConfig::recordError($e->getMessage(), $idShop);
+                http_response_code(502);
+                $report['error'] = $e->getMessage();
+            }
+        }
+        // "suspended" or "invalid_key": the API refuses the shop, the events are kept until it accepts it again.
+        $state = InjellikConfig::apiState($idShop);
+        if ($state) {
+            $report['api'] = $state['reason'];
         }
 
         echo json_encode($report);

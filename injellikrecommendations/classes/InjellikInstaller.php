@@ -32,6 +32,7 @@ class InjellikInstaller
             'actionObjectProductAddAfter',
             'actionObjectProductUpdateAfter',
             'actionObjectProductDeleteAfter',
+            'displayDashboardTop',
         ];
         foreach (InjellikConfig::defaultPlacements() as $placement) {
             if ($placement['hook'] !== null) {

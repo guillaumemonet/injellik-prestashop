@@ -149,7 +149,8 @@ class InjellikSync
 
         $shops = Shop::isFeatureActive() ? Shop::getContextListShopID() : [(int) Context::getContext()->shop->id];
         foreach ($shops as $idShop) {
-            if (!InjellikConfig::isConfigured($idShop) || !InjellikConfig::get(InjellikConfig::AUTO_SYNC, $idShop)) {
+            if (!InjellikConfig::isConfigured($idShop) || !InjellikConfig::get(InjellikConfig::AUTO_SYNC, $idShop)
+                || InjellikConfig::isApiBlocked($idShop)) {
                 continue;
             }
             try {
@@ -165,6 +166,10 @@ class InjellikSync
                     InjellikApiClient::forShop($idShop)->importItems($chunk);
                 }
             } catch (Exception $e) {
+                if ($e instanceof InjellikApiException && $e->isAccessDenied()) {
+                    // Already displayed in the back office; the next full synchronisation sends these products.
+                    continue;
+                }
                 InjellikConfig::recordError($e->getMessage(), $idShop);
                 PrestaShopLogger::addLog('[Injellik] Product synchronisation failed: ' . $e->getMessage(), 2, null, 'Module', 0, true);
             }
@@ -220,7 +225,7 @@ class InjellikSync
                     ]);
                     ++$result['sent'];
                 } catch (InjellikApiException $e) {
-                    if ($e->isRetryable()) {
+                    if ($e->isRetryable() || $e->isAccessDenied()) {
                         // Stop here: the batch restarts from this order on the next call.
                         throw $e;
                     }

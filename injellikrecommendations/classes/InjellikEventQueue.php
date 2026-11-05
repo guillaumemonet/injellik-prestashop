@@ -16,6 +16,10 @@ if (!defined('_PS_VERSION_')) {
  * Hooks only insert a row (a few milliseconds, never a network call), so an API outage can
  * neither slow down nor break the shop. Rows are sent after the response has been delivered
  * ("realtime" mode) or by the cron task, and retried until MAX_ATTEMPTS.
+ *
+ * While the API refuses the shop (suspended subscription, invalid licence key), the events stay pending
+ * without using their attempts, and are sent once the API accepts the shop again. The purge keeps the
+ * queue bounded meanwhile.
  */
 class InjellikEventQueue
 {
@@ -57,7 +61,8 @@ class InjellikEventQueue
         }
         $id = (int) Db::getInstance()->Insert_ID();
 
-        if (InjellikConfig::get(InjellikConfig::SEND_MODE, $idShop) !== InjellikConfig::SEND_CRON) {
+        if (InjellikConfig::get(InjellikConfig::SEND_MODE, $idShop) !== InjellikConfig::SEND_CRON
+            && !InjellikConfig::isApiBlocked($idShop)) {
             self::$created[] = $id;
             if (!self::$shutdownRegistered) {
                 self::$shutdownRegistered = true;
@@ -159,7 +164,7 @@ class InjellikEventQueue
 
         foreach ($rows as $row) {
             $idShop = (int) $row['id_shop'];
-            if (isset($unreachable[$idShop]) || !InjellikConfig::isConfigured($idShop)) {
+            if (isset($unreachable[$idShop]) || !InjellikConfig::isConfigured($idShop) || InjellikConfig::isApiBlocked($idShop)) {
                 continue;
             }
 
@@ -184,6 +189,14 @@ class InjellikEventQueue
                 ]);
                 ++$sent;
             } catch (InjellikApiException $e) {
+                if ($e->isAccessDenied()) {
+                    // The event is valid: it stays pending, without using an attempt. The state of the
+                    // API is stored by the client and displayed in the back office.
+                    $unreachable[$idShop] = true;
+                    self::purge();
+
+                    continue;
+                }
                 $attempts = (int) $row['attempts'] + 1;
                 $retry = $e->isRetryable() && $attempts < self::MAX_ATTEMPTS;
                 self::update((int) $row['id_injellik_event'], [

@@ -68,6 +68,33 @@ class InjellikRecommendations extends Module implements WidgetInterface
         Tools::redirectAdmin($this->context->link->getAdminLink('AdminInjellikConfiguration'));
     }
 
+    /**
+     * Discreet notice on the other back-office pages when the API refuses the shop
+     * (the pages of the module display a detailed one).
+     */
+    public function hookDisplayDashboardTop()
+    {
+        $controller = $this->context->controller;
+        if (!isset($this->context->employee) || !$this->context->employee || $controller instanceof AdminInjellikConfigurationController
+            || $controller instanceof AdminInjellikDashboardController) {
+            return '';
+        }
+        $state = InjellikConfig::apiState((int) $this->context->shop->id);
+        if (!$state) {
+            return '';
+        }
+
+        $template = $this->context->smarty->createTemplate($this->getLocalPath() . 'views/templates/admin/_api_state.tpl');
+        $template->assign([
+            'api_state' => $state,
+            'links' => InjellikConfig::links(),
+            'compact' => true,
+            'configuration_url' => $this->context->link->getAdminLink('AdminInjellikConfiguration'),
+        ]);
+
+        return $template->fetch();
+    }
+
     /* ------------------------------------------------------------------
      * Tracking
      * ------------------------------------------------------------------ */
@@ -231,7 +258,8 @@ class InjellikRecommendations extends Module implements WidgetInterface
 
     public function getWidgetVariables($hookName, array $configuration)
     {
-        if (!InjellikConfig::isConfigured()) {
+        // Suspended subscription or invalid licence key: no block, without calling the API.
+        if (!InjellikConfig::isConfigured() || InjellikConfig::isApiBlocked((int) $this->context->shop->id)) {
             return [];
         }
 

@@ -109,6 +109,10 @@
 .injellik-auth__switch a { color: var(--injellik-muted); }
 .injellik [hidden] { display: none !important; }
 
+/* API refusing the shop (suspended subscription, invalid licence key) */
+.injellik-api-state a { margin-left: 4px; white-space: nowrap; }
+.injellik-api-state--compact { margin: 10px 0 0; padding: 8px 12px; }
+
 /* Placements */
 .injellik-placement {
   border: 1px solid var(--injellik-border);

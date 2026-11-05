@@ -13,3 +13,6 @@
   </div>
   <span class="injellik-header__version">v{$injellik.version|escape:'html':'UTF-8'}</span>
 </div>
+{if !empty($injellik.api_state)}
+  {include file="./_api_state.tpl" api_state=$injellik.api_state links=$injellik.links compact=false}
+{/if}

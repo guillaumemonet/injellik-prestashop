@@ -223,6 +223,20 @@ class InjellikConfig
     }
 
     /**
+     * Pages of the web-nest.fr account linked from the back office.
+     *
+     * @return array{pricing: string, shops: string, subscription: string}
+     */
+    public static function links()
+    {
+        return [
+            'pricing' => self::PRICING_URL,
+            'shops' => self::ACCOUNT_SHOPS_URL,
+            'subscription' => self::SUBSCRIPTION_URL,
+        ];
+    }
+
+    /**
      * Back-office message of an API error, worded for the refusals the merchant can fix.
      */
     public static function apiErrorMessage(Exception $e, $translator)

@@ -154,7 +154,8 @@ class InjellikRecommender
     public function fetch($strategy, array $productIds, $limit)
     {
         $strategies = InjellikConfig::strategies();
-        if (!isset($strategies[$strategy]) || !InjellikConfig::isConfigured()) {
+        $idShop = (int) $this->context->shop->id;
+        if (!isset($strategies[$strategy]) || !InjellikConfig::isConfigured($idShop) || InjellikConfig::isApiBlocked($idShop)) {
             return [];
         }
         $context = $strategies[$strategy]['context'];
@@ -167,7 +168,8 @@ class InjellikRecommender
         $cacheKey = implode('|', [$this->context->shop->id, $strategy, implode(',', $productIds), $user, $limit]);
         $ttl = $context === 'user' ? 60 : (int) InjellikConfig::get(InjellikConfig::CACHE_TTL);
 
-        $cached = InjellikCache::get($cacheKey);
+        // After a refusal of the API, the cache must not display blocks before the API accepts the shop again.
+        $cached = InjellikConfig::apiState($idShop) ? null : InjellikCache::get($cacheKey);
         if ($cached !== null) {
             return $cached;
         }
@@ -175,6 +177,10 @@ class InjellikRecommender
         try {
             $skus = self::extractSkus($this->callApi($strategy, $productIds, $user, $limit));
         } catch (InjellikApiException $e) {
+            if ($e->isAccessDenied()) {
+                // Suspended subscription or invalid key: the block is hidden, the back office shows why.
+                return [];
+            }
             if ($e->getStatus() !== 404) {
                 InjellikConfig::recordError($e->getMessage());
 

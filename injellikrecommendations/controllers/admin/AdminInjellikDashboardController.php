@@ -99,6 +99,8 @@ class AdminInjellikDashboardController extends ModuleAdminController
             'ajax_url' => $this->context->link->getAdminLink('AdminInjellikDashboard') . '&ajax=1',
             'logo' => $this->module->getPathUri() . 'logo.png',
             'version' => $this->module->version,
+            'api_state' => InjellikConfig::apiState($idShop),
+            'links' => InjellikConfig::links(),
             'days' => $days,
             'api' => $this->apiHealth($idShop),
             'last_error' => InjellikConfig::lastError($idShop),
@@ -137,7 +139,7 @@ class AdminInjellikDashboardController extends ModuleAdminController
 
             return ['ok' => true, 'database' => isset($status['database']) ? $status['database'] : null, 'latency' => $latency, 'message' => ''];
         } catch (InjellikApiException $e) {
-            return ['ok' => false, 'database' => null, 'latency' => null, 'message' => $e->getMessage()];
+            return ['ok' => false, 'database' => null, 'latency' => null, 'message' => InjellikConfig::apiErrorMessage($e, $this->context->getTranslator())];
         }
     }
 
