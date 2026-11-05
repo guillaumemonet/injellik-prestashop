@@ -16,6 +16,7 @@ if (!defined('_PS_VERSION_')) {
 class InjellikConfig
 {
     const API_URL = 'INJELLIK_API_URL';
+    const LICENCE_KEY = 'INJELLIK_LICENCE_KEY';
     const API_LOGIN = 'INJELLIK_API_LOGIN';
     const API_PASSWORD = 'INJELLIK_API_PASSWORD';
     const JWT = 'INJELLIK_JWT';
@@ -37,6 +38,23 @@ class InjellikConfig
     const IMPORT_ORDERS_COUNT = 'INJELLIK_IMPORT_ORDERS_COUNT';
     const LAST_CRON = 'INJELLIK_LAST_CRON';
     const LAST_ERROR = 'INJELLIK_LAST_ERROR';
+    const API_STATE = 'INJELLIK_API_STATE';
+
+    /** Production API, used when no URL is configured */
+    const DEFAULT_API_URL = 'https://injellik.web-nest.fr';
+    /** Licence key of a shop, displayed in the web-nest.fr account: "ijk_lic_" + 40 lowercase hexadecimal characters */
+    const LICENCE_KEY_PATTERN = '/^ijk_lic_[0-9a-f]{40}$/';
+
+    /** The subscription of the account is suspended (HTTP 403 "tenant_suspended") */
+    const STATE_SUSPENDED = 'suspended';
+    /** The licence key is unknown or revoked (HTTP 401) */
+    const STATE_INVALID_KEY = 'invalid_key';
+    /** Seconds between two attempts while the API refuses the shop */
+    const STATE_RETRY_DELAY = 900;
+
+    const SUBSCRIPTION_URL = 'https://web-nest.fr/mon-compte/abonnement/';
+    const ACCOUNT_SHOPS_URL = 'https://web-nest.fr/mon-compte/boutiques/';
+    const PRICING_URL = 'https://web-nest.fr/#tarifs';
 
     const RENDER_AJAX = 'ajax';
     const RENDER_SERVER = 'server';
@@ -54,11 +72,11 @@ class InjellikConfig
     public static function keys()
     {
         return [
-            self::API_URL, self::API_LOGIN, self::API_PASSWORD, self::JWT, self::JWT_EXPIRES,
+            self::API_URL, self::LICENCE_KEY, self::API_LOGIN, self::API_PASSWORD, self::JWT, self::JWT_EXPIRES,
             self::ONBOARDED, self::PLACEMENTS, self::RENDER_MODE, self::SEND_MODE, self::TIMEOUT,
             self::CACHE_TTL, self::HIDE_OUT_OF_STOCK, self::EXCLUDE_BOTS, self::AUTO_SYNC, self::CRON_TOKEN,
             self::CATALOG_SYNCED_AT, self::CATALOG_COUNT, self::IMPORT_LAST_ORDER, self::IMPORT_ORDERS_AT,
-            self::IMPORT_ORDERS_COUNT, self::LAST_CRON, self::LAST_ERROR,
+            self::IMPORT_ORDERS_COUNT, self::LAST_CRON, self::LAST_ERROR, self::API_STATE,
             // Keys of version 1.x
             'INJELLIK_LAST_IMPORTED_ORDER_ID', 'INJELLIK_LAST_IMPORTED_PRODUCT_ID',
         ];
@@ -72,6 +90,7 @@ class InjellikConfig
     public static function defaults()
     {
         return [
+            self::API_URL => self::DEFAULT_API_URL,
             self::RENDER_MODE => self::RENDER_AJAX,
             self::SEND_MODE => self::SEND_REALTIME,
             self::TIMEOUT => 3,
@@ -98,9 +117,109 @@ class InjellikConfig
         return Configuration::updateValue($key, $value);
     }
 
+    /**
+     * URL of the API of a shop, the production API when none is configured.
+     */
+    public static function apiUrl($idShop = null)
+    {
+        $url = trim((string) self::get(self::API_URL, $idShop));
+
+        return $url !== '' ? $url : self::DEFAULT_API_URL;
+    }
+
+    /**
+     * A licence key (default mode) or a login and a password (accounts created before the subscriptions).
+     */
     public static function isConfigured($idShop = null)
     {
-        return self::get(self::API_URL, $idShop) && self::get(self::API_LOGIN, $idShop) && self::get(self::API_PASSWORD, $idShop);
+        return self::usesLicenceKey($idShop)
+            || (self::get(self::API_LOGIN, $idShop) && self::get(self::API_PASSWORD, $idShop));
+    }
+
+    public static function usesLicenceKey($idShop = null)
+    {
+        return (string) self::get(self::LICENCE_KEY, $idShop) !== '';
+    }
+
+    /**
+     * Trims and lowercases a licence key typed or pasted in the back office.
+     */
+    public static function normalizeLicenceKey($key)
+    {
+        return Tools::strtolower(trim((string) $key));
+    }
+
+    public static function isValidLicenceKey($key)
+    {
+        return (bool) preg_match(self::LICENCE_KEY_PATTERN, (string) $key);
+    }
+
+    /**
+     * State of a shop the API refuses: subscription suspended or licence key invalid.
+     *
+     * @return array{reason: string, since: string, checked_at: int}|null
+     */
+    public static function apiState($idShop = null)
+    {
+        $raw = self::get(self::API_STATE, $idShop);
+        $state = $raw ? json_decode($raw, true) : null;
+
+        return is_array($state) && isset($state['reason']) ? $state + ['since' => '', 'checked_at' => 0] : null;
+    }
+
+    /**
+     * True while the API must not be called: it refused the shop less than STATE_RETRY_DELAY seconds ago.
+     */
+    public static function isApiBlocked($idShop = null)
+    {
+        $state = self::apiState($idShop);
+
+        return $state !== null && (int) $state['checked_at'] > time() - self::STATE_RETRY_DELAY;
+    }
+
+    /**
+     * Records a refusal of the API (the first date is kept while the reason is the same).
+     */
+    public static function setApiState($reason, $idShop = null)
+    {
+        $state = self::apiState($idShop);
+
+        return self::set(self::API_STATE, json_encode([
+            'reason' => (string) $reason,
+            'since' => $state && $state['reason'] === $reason && $state['since'] ? $state['since'] : date('Y-m-d H:i:s'),
+            'checked_at' => time(),
+        ]), $idShop);
+    }
+
+    /**
+     * Marks the start of a new attempt, so that concurrent requests keep waiting.
+     */
+    public static function touchApiState($idShop = null)
+    {
+        $state = self::apiState($idShop);
+        if ($state) {
+            $state['checked_at'] = time();
+            self::set(self::API_STATE, json_encode($state), $idShop);
+        }
+    }
+
+    /**
+     * Allows a new attempt at the next call (the state stays displayed until then).
+     */
+    public static function allowApiRetry($idShop = null)
+    {
+        $state = self::apiState($idShop);
+        if ($state) {
+            $state['checked_at'] = 0;
+            self::set(self::API_STATE, json_encode($state), $idShop);
+        }
+    }
+
+    public static function clearApiState($idShop = null)
+    {
+        if (self::get(self::API_STATE, $idShop)) {
+            self::set(self::API_STATE, '', $idShop);
+        }
     }
 
     public static function isOnboarded($idShop = null)

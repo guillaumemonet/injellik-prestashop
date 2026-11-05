@@ -12,18 +12,31 @@ if (!defined('_PS_VERSION_')) {
 
 class InjellikApiException extends Exception
 {
+    /** Error code of the API when the subscription of the account is suspended (HTTP 403) */
+    const ERROR_SUSPENDED = 'tenant_suspended';
+    /** Licence key unknown or revoked (HTTP 401 in licence key mode) */
+    const ERROR_INVALID_KEY = 'invalid_licence_key';
+
     /** @var int HTTP status, 0 when the API could not be reached */
     private $status;
+    /** @var string|null */
+    private $errorCode;
 
-    public function __construct($message, $status = 0)
+    public function __construct($message, $status = 0, $errorCode = null)
     {
         parent::__construct($message, (int) $status);
         $this->status = (int) $status;
+        $this->errorCode = $errorCode === null ? null : (string) $errorCode;
     }
 
     public function getStatus()
     {
         return $this->status;
+    }
+
+    public function getErrorCode()
+    {
+        return $this->errorCode;
     }
 
     /**
@@ -33,13 +46,37 @@ class InjellikApiException extends Exception
     {
         return $this->status === 0 || $this->status === 429 || $this->status >= 500;
     }
+
+    public function isSuspended()
+    {
+        return $this->errorCode === self::ERROR_SUSPENDED;
+    }
+
+    public function isInvalidKey()
+    {
+        return $this->errorCode === self::ERROR_INVALID_KEY;
+    }
+
+    /**
+     * The API refuses the shop as a whole (suspended subscription, invalid licence key):
+     * no request can succeed until the merchant acts.
+     */
+    public function isAccessDenied()
+    {
+        return $this->isSuspended() || $this->isInvalidKey();
+    }
 }
 
 /**
- * HTTP client of the Injellik API (JWT authentication, JSON in and out).
+ * HTTP client of the Injellik API (JSON in and out).
  *
- * The JWT is cached in the configuration until shortly before it expires,
- * so a front request costs a single HTTP call.
+ * Two authentication modes:
+ * - licence key (default): "X-Api-Key" header on every request, no login;
+ * - login and password (accounts created before the subscriptions): JWT from /api/login, cached in the
+ *   configuration until shortly before it expires, so that a front request costs a single HTTP call.
+ *
+ * When the API refuses the shop (403 "tenant_suspended", or 401 with a licence key), the state is stored
+ * and the client stops calling the API for InjellikConfig::STATE_RETRY_DELAY seconds.
  */
 class InjellikApiClient
 {
@@ -51,19 +88,26 @@ class InjellikApiClient
     private $baseUrl;
     private $login;
     private $password;
+    private $licenceKey;
     private $timeout;
     private $idShop;
     private $token;
-    private $persistToken;
+    private $persist;
 
-    public function __construct($baseUrl, $login, $password, $timeout = 3, $idShop = null, $persistToken = true)
+    /**
+     * @param string $licenceKey when not empty, used instead of the login and the password
+     * @param bool $persist false for a client that must not touch the configuration (connection test):
+     *                      no cached JWT, no stored API state
+     */
+    public function __construct($baseUrl, $login, $password, $timeout = 3, $idShop = null, $persist = true, $licenceKey = '')
     {
         $this->baseUrl = self::normalizeUrl($baseUrl);
         $this->login = (string) $login;
         $this->password = (string) $password;
+        $this->licenceKey = trim((string) $licenceKey);
         $this->timeout = max(1, (int) $timeout);
         $this->idShop = $idShop === null ? null : (int) $idShop;
-        $this->persistToken = (bool) $persistToken;
+        $this->persist = (bool) $persist;
     }
 
     /**
@@ -74,11 +118,13 @@ class InjellikApiClient
         $idShop = $idShop === null ? (int) Context::getContext()->shop->id : (int) $idShop;
         if (!isset(self::$instances[$idShop])) {
             self::$instances[$idShop] = new self(
-                InjellikConfig::get(InjellikConfig::API_URL, $idShop),
+                InjellikConfig::apiUrl($idShop),
                 InjellikConfig::get(InjellikConfig::API_LOGIN, $idShop),
                 InjellikConfig::get(InjellikConfig::API_PASSWORD, $idShop),
                 (int) InjellikConfig::get(InjellikConfig::TIMEOUT, $idShop, 3),
-                $idShop
+                $idShop,
+                true,
+                InjellikConfig::get(InjellikConfig::LICENCE_KEY, $idShop)
             );
         }
 
@@ -105,7 +151,12 @@ class InjellikApiClient
 
     public function isConfigured()
     {
-        return $this->baseUrl !== '' && $this->login !== '' && $this->password !== '';
+        return $this->baseUrl !== '' && ($this->usesLicenceKey() || ($this->login !== '' && $this->password !== ''));
+    }
+
+    public function usesLicenceKey()
+    {
+        return $this->licenceKey !== '';
     }
 
     public function setTimeout($timeout)
@@ -124,17 +175,20 @@ class InjellikApiClient
     }
 
     /**
-     * Authenticates and returns a fresh JWT.
+     * Authenticates and returns a fresh JWT (login and password mode only: a licence key needs no login).
      */
     public function authenticate()
     {
+        if ($this->usesLicenceKey()) {
+            throw new InjellikApiException('A licence key does not use /api/login.', 0);
+        }
         $response = $this->send('POST', $this->baseUrl . '/api/login', [], ['email' => $this->login, 'password' => $this->password]);
         if (empty($response['token'])) {
             throw new InjellikApiException('The API did not return a token.', 500);
         }
         $this->token = (string) $response['token'];
 
-        if ($this->persistToken) {
+        if ($this->persist) {
             InjellikConfig::set(InjellikConfig::JWT, $this->token, $this->idShop);
             InjellikConfig::set(InjellikConfig::JWT_EXPIRES, self::tokenExpiry($this->token), $this->idShop);
         }
@@ -166,7 +220,12 @@ class InjellikApiClient
     }
 
     /**
-     * Authenticated call to /api/*. A 401 triggers one re-authentication (expired or revoked token).
+     * Authenticated call to /api/*.
+     *
+     * Licence key: "X-Api-Key" header, a 401 means that the key is invalid or revoked (no retry).
+     * Login and password: a 401 triggers one re-authentication (expired or revoked JWT).
+     * A shop refused by the API is not called again before InjellikConfig::STATE_RETRY_DELAY seconds;
+     * the first successful call clears the state.
      */
     public function request($method, $path, array $query = [], $body = null)
     {
@@ -179,6 +238,45 @@ class InjellikApiClient
             $url .= '?' . http_build_query($query, '', '&');
         }
 
+        $state = $this->persist ? InjellikConfig::apiState($this->idShop) : null;
+        if ($state) {
+            if (InjellikConfig::isApiBlocked($this->idShop)) {
+                throw self::refusal($state['reason']);
+            }
+            // This request is the new attempt: the concurrent ones keep waiting.
+            InjellikConfig::touchApiState($this->idShop);
+        }
+
+        try {
+            $data = $this->usesLicenceKey() ? $this->sendWithKey($method, $url, $body) : $this->sendWithJwt($method, $url, $body);
+        } catch (InjellikApiException $e) {
+            if ($this->persist && $e->isAccessDenied()) {
+                InjellikConfig::setApiState($e->isSuspended() ? InjellikConfig::STATE_SUSPENDED : InjellikConfig::STATE_INVALID_KEY, $this->idShop);
+            }
+            throw $e;
+        }
+
+        if ($state) {
+            InjellikConfig::clearApiState($this->idShop);
+        }
+
+        return $data;
+    }
+
+    private function sendWithKey($method, $url, $body)
+    {
+        try {
+            return $this->send($method, $url, ['X-Api-Key: ' . $this->licenceKey], $body);
+        } catch (InjellikApiException $e) {
+            if ($e->getStatus() === 401) {
+                throw new InjellikApiException($e->getMessage(), 401, InjellikApiException::ERROR_INVALID_KEY);
+            }
+            throw $e;
+        }
+    }
+
+    private function sendWithJwt($method, $url, $body)
+    {
         $token = $this->token();
         try {
             return $this->send($method, $url, ['Authorization: Bearer ' . $token], $body);
@@ -192,9 +290,19 @@ class InjellikApiClient
         }
     }
 
+    /**
+     * Exception thrown without calling the API while it refuses the shop.
+     */
+    private static function refusal($reason)
+    {
+        return $reason === InjellikConfig::STATE_SUSPENDED
+            ? new InjellikApiException(InjellikApiException::ERROR_SUSPENDED, 403, InjellikApiException::ERROR_SUSPENDED)
+            : new InjellikApiException('Invalid or revoked licence key.', 401, InjellikApiException::ERROR_INVALID_KEY);
+    }
+
     private function token()
     {
-        if ($this->token === null && $this->persistToken) {
+        if ($this->token === null && $this->persist) {
             $expires = (int) InjellikConfig::get(InjellikConfig::JWT_EXPIRES, $this->idShop);
             if ($expires > time()) {
                 $this->token = (string) InjellikConfig::get(InjellikConfig::JWT, $this->idShop);
@@ -254,7 +362,8 @@ class InjellikApiClient
 
         $data = $raw === '' ? [] : json_decode($raw, true);
         if ($status >= 400) {
-            $message = is_array($data) && isset($data['error']) ? (string) $data['error'] : sprintf('HTTP %d', $status);
+            $error = is_array($data) && isset($data['error']) && is_scalar($data['error']) ? (string) $data['error'] : null;
+            $message = $error !== null ? $error : sprintf('HTTP %d', $status);
             if (is_array($data) && !empty($data['violations'])) {
                 $details = [];
                 foreach ($data['violations'] as $violation) {
@@ -262,7 +371,8 @@ class InjellikApiClient
                 }
                 $message .= ' (' . implode('; ', $details) . ')';
             }
-            throw new InjellikApiException($message, $status);
+            $suspended = $status === 403 && $error === InjellikApiException::ERROR_SUSPENDED;
+            throw new InjellikApiException($message, $status, $suspended ? $error : null);
         }
         if (!is_array($data)) {
             throw new InjellikApiException(sprintf('Invalid JSON response (HTTP %d).', $status), $status ?: 500);
