@@ -166,6 +166,16 @@
         <h3><i class="icon-wrench"></i> {l s='Advanced settings' d='Modules.Injellikrecommendations.Admin'}</h3>
 
         <div class="form-group">
+          <label class="control-label col-lg-3" for="injellik-advanced-api-url">{l s='API URL' d='Modules.Injellikrecommendations.Admin'}</label>
+          <div class="col-lg-6">
+            <input type="url" id="injellik-advanced-api-url" name="api_url" class="form-control"
+                   placeholder="{$injellik.connection.default_url|escape:'html':'UTF-8'}"
+                   value="{$injellik.connection.url|escape:'html':'UTF-8'}">
+            <p class="help-block">{l s='Keep the default address (%url%) unless Web-Nest asks you to change it.' sprintf=['%url%' => $injellik.connection.default_url] d='Modules.Injellikrecommendations.Admin'}</p>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label class="control-label col-lg-3">{l s='Block rendering' d='Modules.Injellikrecommendations.Admin'}</label>
           <div class="col-lg-6">
             <div class="radio"><label><input type="radio" name="render_mode" value="ajax"{if $injellik.advanced.render_mode != 'server'} checked{/if}> {l s='Asynchronous (recommended)' d='Modules.Injellikrecommendations.Admin'}</label></div>

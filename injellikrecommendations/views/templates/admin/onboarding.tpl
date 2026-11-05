@@ -48,8 +48,8 @@
       </div>
 
       <div class="alert alert-info">
-        {l s='You need an Injellik account (API URL, login and password).' d='Modules.Injellikrecommendations.Admin'}
-        <a href="{$injellik.signup_url|escape:'html':'UTF-8'}" target="_blank" rel="noopener">{l s='Request an account' d='Modules.Injellikrecommendations.Admin'} <i class="icon-external-link"></i></a>
+        {l s='You need an Injellik licence key, provided with a subscription on web-nest.fr.' d='Modules.Injellikrecommendations.Admin'}
+        <a href="{$injellik.links.pricing|escape:'html':'UTF-8'}" target="_blank" rel="noopener">{l s='Get a key' d='Modules.Injellikrecommendations.Admin'} <i class="icon-external-link"></i></a>
       </div>
 
       <div class="injellik-actions">
@@ -58,7 +58,7 @@
 
     {elseif $injellik.step == 'connection'}
       <h2 class="injellik-step__title">{l s='Connect your shop to Injellik' d='Modules.Injellikrecommendations.Admin'}</h2>
-      <p class="injellik-step__lead">{l s='Enter the credentials of your Injellik API account. They are stored in your shop configuration and only used by the server.' d='Modules.Injellikrecommendations.Admin'}</p>
+      <p class="injellik-step__lead">{l s='Paste the licence key of this shop. It is stored in your shop configuration and only used by the server.' d='Modules.Injellikrecommendations.Admin'}</p>
       {include file="./_connection_form.tpl" onboarding=true}
 
     {elseif $injellik.step == 'catalog'}

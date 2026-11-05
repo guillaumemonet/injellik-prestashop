@@ -16,7 +16,8 @@ if (!defined('_PS_VERSION_')) {
 class AdminInjellikConfigurationController extends ModuleAdminController
 {
     const STEPS = ['welcome', 'connection', 'catalog', 'history', 'placements', 'done'];
-    const SIGNUP_URL = 'https://www.web-nest.fr/injellik';
+    const MODE_LICENCE = 'licence';
+    const MODE_LOGIN = 'login';
 
     /** @var InjellikRecommendations */
     public $module;
@@ -111,32 +112,36 @@ class AdminInjellikConfigurationController extends ModuleAdminController
 
     private function processConnection()
     {
-        $url = InjellikApiClient::normalizeUrl(Tools::getValue('api_url'));
-        $login = trim((string) Tools::getValue('api_login'));
-        $password = (string) Tools::getValue('api_password');
-        if ($password === '') {
-            $password = (string) InjellikConfig::get(InjellikConfig::API_PASSWORD);
-        }
-
-        if (!Validate::isAbsoluteUrl($url)) {
-            $this->errors[] = $this->trans('The API URL is not valid.', [], InjellikConfig::DOMAIN_ADMIN);
-        }
-        if ($login === '' || $password === '') {
-            $this->errors[] = $this->trans('The login and the password are required.', [], InjellikConfig::DOMAIN_ADMIN);
-        }
+        $credentials = $this->postedCredentials();
+        $this->errors = array_merge($this->errors, $this->validateCredentials($credentials));
         if ($this->errors) {
             return;
         }
 
-        InjellikConfig::set(InjellikConfig::API_URL, $url);
-        InjellikConfig::set(InjellikConfig::API_LOGIN, $login);
-        InjellikConfig::set(InjellikConfig::API_PASSWORD, $password);
+        if ($credentials['mode'] === self::MODE_LICENCE) {
+            InjellikConfig::set(InjellikConfig::LICENCE_KEY, $credentials['licence_key']);
+        } else {
+            // Without a licence key, the login and the password are used again.
+            InjellikConfig::set(InjellikConfig::LICENCE_KEY, '');
+            InjellikConfig::set(InjellikConfig::API_URL, $credentials['url']);
+            InjellikConfig::set(InjellikConfig::API_LOGIN, $credentials['login']);
+            InjellikConfig::set(InjellikConfig::API_PASSWORD, $credentials['password']);
+        }
         InjellikConfig::set(InjellikConfig::JWT, '');
         InjellikConfig::set(InjellikConfig::JWT_EXPIRES, 0);
         InjellikApiClient::reset();
         InjellikCache::clear();
 
-        $test = $this->testConnection($url, $login, $password);
+        // Saving the connection is also a new attempt for a shop the API refused.
+        $test = $this->testConnection($credentials);
+        $idShop = (int) $this->context->shop->id;
+        if ($test['ok']) {
+            InjellikConfig::clearApiState($idShop);
+        } elseif ($test['state']) {
+            InjellikConfig::setApiState($test['state'], $idShop);
+        } else {
+            InjellikConfig::allowApiRetry($idShop);
+        }
         if (!$test['ok']) {
             $this->errors[] = $test['message'];
 
@@ -144,6 +149,50 @@ class AdminInjellikConfigurationController extends ModuleAdminController
         }
 
         Tools::redirectAdmin(Tools::getValue('onboarding') ? $this->stepUrl('catalog') : $this->url(['conf' => 4]));
+    }
+
+    /**
+     * Connection settings posted by the form, completed with the stored values (empty secret = unchanged).
+     *
+     * @return array{mode: string, url: string, licence_key: string, login: string, password: string}
+     */
+    private function postedCredentials()
+    {
+        $url = trim((string) Tools::getValue('api_url'));
+        $licenceKey = InjellikConfig::normalizeLicenceKey(Tools::getValue('licence_key'));
+        $login = Tools::getValue('api_login');
+        $password = (string) Tools::getValue('api_password');
+
+        return [
+            'mode' => Tools::getValue('auth_mode') === self::MODE_LOGIN ? self::MODE_LOGIN : self::MODE_LICENCE,
+            'url' => $url !== '' ? InjellikApiClient::normalizeUrl($url) : InjellikApiClient::normalizeUrl(InjellikConfig::apiUrl()),
+            'licence_key' => $licenceKey !== '' ? $licenceKey : (string) InjellikConfig::get(InjellikConfig::LICENCE_KEY),
+            'login' => $login !== false ? trim((string) $login) : (string) InjellikConfig::get(InjellikConfig::API_LOGIN),
+            'password' => $password !== '' ? $password : (string) InjellikConfig::get(InjellikConfig::API_PASSWORD),
+        ];
+    }
+
+    /**
+     * @return string[] error messages
+     */
+    private function validateCredentials(array $credentials)
+    {
+        $d = InjellikConfig::DOMAIN_ADMIN;
+        $errors = [];
+        if (!Validate::isAbsoluteUrl($credentials['url'])) {
+            $errors[] = $this->trans('The API URL is not valid.', [], $d);
+        }
+        if ($credentials['mode'] === self::MODE_LICENCE) {
+            if ($credentials['licence_key'] === '') {
+                $errors[] = $this->trans('The licence key is required.', [], $d);
+            } elseif (!InjellikConfig::isValidLicenceKey($credentials['licence_key'])) {
+                $errors[] = $this->trans('This licence key is not valid: it starts with "ijk_lic_", followed by 40 characters (digits and letters a to f). Copy it again from your web-nest.fr account.', [], $d);
+            }
+        } elseif ($credentials['login'] === '' || $credentials['password'] === '') {
+            $errors[] = $this->trans('The login and the password are required.', [], $d);
+        }
+
+        return $errors;
     }
 
     private function processPlacements()
@@ -173,6 +222,19 @@ class AdminInjellikConfigurationController extends ModuleAdminController
 
     private function processAdvanced()
     {
+        $url = trim((string) Tools::getValue('api_url'));
+        $url = InjellikApiClient::normalizeUrl($url !== '' ? $url : InjellikConfig::DEFAULT_API_URL);
+        if (!Validate::isAbsoluteUrl($url)) {
+            $this->errors[] = $this->trans('The API URL is not valid.', [], InjellikConfig::DOMAIN_ADMIN);
+
+            return;
+        }
+        if ($url !== InjellikApiClient::normalizeUrl(InjellikConfig::apiUrl())) {
+            InjellikConfig::set(InjellikConfig::API_URL, $url);
+            InjellikConfig::set(InjellikConfig::JWT, '');
+            InjellikConfig::set(InjellikConfig::JWT_EXPIRES, 0);
+            InjellikApiClient::reset();
+        }
         InjellikConfig::set(InjellikConfig::RENDER_MODE, Tools::getValue('render_mode') === InjellikConfig::RENDER_SERVER ? InjellikConfig::RENDER_SERVER : InjellikConfig::RENDER_AJAX);
         InjellikConfig::set(InjellikConfig::SEND_MODE, Tools::getValue('send_mode') === InjellikConfig::SEND_CRON ? InjellikConfig::SEND_CRON : InjellikConfig::SEND_REALTIME);
         InjellikConfig::set(InjellikConfig::TIMEOUT, max(1, min(10, (int) Tools::getValue('timeout'))));
@@ -186,27 +248,57 @@ class AdminInjellikConfigurationController extends ModuleAdminController
     }
 
     /**
-     * @return array{ok: bool, message: string, status: array|null}
+     * Checks that the API answers and accepts the credentials, with a light authenticated request.
+     *
+     * The "state" of the result is the API state to record (suspended subscription, invalid licence key).
+     *
+     * @return array{ok: bool, message: string, status: array|null, state: string|null}
      */
-    private function testConnection($url, $login, $password)
+    private function testConnection(array $credentials)
     {
-        $client = new InjellikApiClient($url, $login, $password, 5, null, false);
+        $d = InjellikConfig::DOMAIN_ADMIN;
+        $client = new InjellikApiClient(
+            $credentials['url'],
+            $credentials['login'],
+            $credentials['password'],
+            5,
+            null,
+            false,
+            $credentials['mode'] === self::MODE_LICENCE ? $credentials['licence_key'] : ''
+        );
         try {
             $status = $client->status();
         } catch (InjellikApiException $e) {
-            return ['ok' => false, 'status' => null, 'message' => $this->trans('The API cannot be reached: %s', [$e->getMessage()], InjellikConfig::DOMAIN_ADMIN)];
+            return ['ok' => false, 'status' => null, 'state' => null, 'message' => $this->trans('The API cannot be reached: %s', [$e->getMessage()], $d)];
         }
         try {
-            $client->authenticate();
+            if (!$client->usesLicenceKey()) {
+                $client->authenticate();
+            }
+            try {
+                $client->get('/api/usage');
+            } catch (InjellikApiException $e) {
+                if ($e->getStatus() !== 404) {
+                    throw $e;
+                }
+                // API without the usage route: any other authenticated route proves the credentials.
+                $client->get('/api/actiontypes');
+            }
         } catch (InjellikApiException $e) {
+            if ($e->isSuspended()) {
+                return ['ok' => false, 'status' => $status, 'state' => InjellikConfig::STATE_SUSPENDED, 'message' => InjellikConfig::apiErrorMessage($e, $this->context->getTranslator())];
+            }
+            if ($e->isInvalidKey()) {
+                return ['ok' => false, 'status' => $status, 'state' => InjellikConfig::STATE_INVALID_KEY, 'message' => InjellikConfig::apiErrorMessage($e, $this->context->getTranslator())];
+            }
             $message = $e->getStatus() === 401
-                ? $this->trans('The API rejected the login or the password.', [], InjellikConfig::DOMAIN_ADMIN)
-                : $this->trans('Authentication failed: %s', [$e->getMessage()], InjellikConfig::DOMAIN_ADMIN);
+                ? $this->trans('The API rejected the login or the password.', [], $d)
+                : $this->trans('Authentication failed: %s', [$e->getMessage()], $d);
 
-            return ['ok' => false, 'status' => $status, 'message' => $message];
+            return ['ok' => false, 'status' => $status, 'state' => null, 'message' => $message];
         }
 
-        return ['ok' => true, 'status' => $status, 'message' => $this->trans('Connection successful.', [], InjellikConfig::DOMAIN_ADMIN)];
+        return ['ok' => true, 'status' => $status, 'state' => null, 'message' => $this->trans('Connection successful.', [], $d)];
     }
 
     /* ------------------------------------------------------------------
@@ -224,13 +316,12 @@ class AdminInjellikConfigurationController extends ModuleAdminController
 
     public function ajaxProcessTestConnection()
     {
-        $url = Tools::getValue('api_url') !== false ? InjellikApiClient::normalizeUrl(Tools::getValue('api_url')) : InjellikConfig::get(InjellikConfig::API_URL);
-        $login = Tools::getValue('api_login') !== false ? trim((string) Tools::getValue('api_login')) : InjellikConfig::get(InjellikConfig::API_LOGIN);
-        $password = (string) Tools::getValue('api_password');
-        if ($password === '') {
-            $password = (string) InjellikConfig::get(InjellikConfig::API_PASSWORD);
+        $credentials = $this->postedCredentials();
+        $errors = $this->validateCredentials($credentials);
+        if ($errors) {
+            $this->json(['ok' => false, 'message' => implode(' ', $errors)]);
         }
-        $this->json($this->testConnection($url, $login, $password));
+        $this->json($this->testConnection($credentials));
     }
 
     public function ajaxProcessSyncCatalog()
@@ -322,7 +413,6 @@ class AdminInjellikConfigurationController extends ModuleAdminController
                 'steps' => $this->stepLabels(),
                 'step_index' => array_search($step, self::STEPS, true),
                 'step_urls' => array_combine(self::STEPS, array_map([$this, 'stepUrl'], self::STEPS)),
-                'signup_url' => self::SIGNUP_URL,
                 'product_count' => InjellikSync::countProducts($idShop),
                 'order_count' => InjellikSync::countOrders($idShop),
                 'history_since' => date('Y-m-d', strtotime('-1 year')),
@@ -377,10 +467,18 @@ class AdminInjellikConfigurationController extends ModuleAdminController
             'logo' => $this->module->getPathUri() . 'logo.png',
             'version' => $this->module->version,
             'connection' => [
-                'url' => InjellikConfig::get(InjellikConfig::API_URL),
+                'mode' => $this->connectionMode(),
+                'url' => InjellikApiClient::normalizeUrl(InjellikConfig::apiUrl()),
+                'default_url' => InjellikConfig::DEFAULT_API_URL,
+                'licence_key_hint' => self::maskLicenceKey((string) InjellikConfig::get(InjellikConfig::LICENCE_KEY)),
                 'login' => InjellikConfig::get(InjellikConfig::API_LOGIN),
                 'has_password' => (bool) InjellikConfig::get(InjellikConfig::API_PASSWORD),
                 'configured' => InjellikConfig::isConfigured(),
+            ],
+            'links' => [
+                'pricing' => InjellikConfig::PRICING_URL,
+                'shops' => InjellikConfig::ACCOUNT_SHOPS_URL,
+                'subscription' => InjellikConfig::SUBSCRIPTION_URL,
             ],
             'placements' => $this->placementsForForm(),
             'strategies' => $this->strategyLabels(),
@@ -390,8 +488,30 @@ class AdminInjellikConfigurationController extends ModuleAdminController
             'posted' => [
                 'api_url' => Tools::getValue('api_url'),
                 'api_login' => Tools::getValue('api_login'),
+                'licence_key' => Tools::getValue('licence_key'),
             ],
         ];
+    }
+
+    /**
+     * Form displayed first: the one posted, the licence key, or the login of an installation made before the subscriptions.
+     */
+    private function connectionMode()
+    {
+        $posted = Tools::getValue('auth_mode');
+        if ($posted === self::MODE_LOGIN || $posted === self::MODE_LICENCE) {
+            return $posted;
+        }
+
+        return !InjellikConfig::usesLicenceKey() && InjellikConfig::get(InjellikConfig::API_LOGIN) ? self::MODE_LOGIN : self::MODE_LICENCE;
+    }
+
+    /**
+     * "ijk_lic_••••••••3f9a": enough to recognise the stored key without displaying it.
+     */
+    private static function maskLicenceKey($key)
+    {
+        return $key === '' ? '' : 'ijk_lic_' . str_repeat("\u{2022}", 8) . Tools::substr($key, -4);
     }
 
     private function stepLabels()

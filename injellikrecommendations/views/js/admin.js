@@ -31,22 +31,64 @@
     return root ? root.getAttribute('data-ajax-url') : '';
   }
 
-  /* Connection test */
+  /* Connection form: licence key (default) or login and password, and connection test */
+  function initAuthSwitch(form) {
+    var mode = form.querySelector('.js-injellik-auth-mode');
+    if (!mode) {
+      return;
+    }
+    form.querySelectorAll('.js-injellik-auth-switch').forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        var selected = link.getAttribute('data-mode');
+        mode.value = selected;
+        // Only the fields of the selected mode are validated and posted.
+        form.querySelectorAll('.js-injellik-auth').forEach(function (section) {
+          var active = section.getAttribute('data-mode') === selected;
+          section.hidden = !active;
+          section.querySelectorAll('input').forEach(function (input) { input.disabled = !active; });
+        });
+        form.querySelectorAll('.js-injellik-auth-switch').forEach(function (other) {
+          other.hidden = other.getAttribute('data-mode') === selected;
+        });
+        var result = form.querySelector('.js-injellik-test-result');
+        if (result) {
+          result.hidden = true;
+        }
+        var first = form.querySelector('.js-injellik-auth[data-mode="' + selected + '"] input');
+        if (first) {
+          first.focus();
+        }
+      });
+    });
+  }
+
+  function fieldValue(form, name) {
+    var field = form.querySelector('[name=' + name + ']');
+    return field && !field.disabled ? field.value : '';
+  }
+
   function initConnectionTest(form) {
     var button = form.querySelector('.js-injellik-test');
     var result = form.querySelector('.js-injellik-test-result');
+    initAuthSwitch(form);
     if (!button) {
       return;
     }
     button.addEventListener('click', function () {
       var label = button.innerHTML;
+      var mode = form.querySelector('.js-injellik-auth-mode');
+      var params = { auth_mode: mode ? mode.value : 'licence' };
+      if (params.auth_mode === 'login') {
+        params.api_url = fieldValue(form, 'api_url');
+        params.api_login = fieldValue(form, 'api_login');
+        params.api_password = fieldValue(form, 'api_password');
+      } else {
+        params.licence_key = fieldValue(form, 'licence_key');
+      }
       button.disabled = true;
       button.textContent = button.getAttribute('data-loading');
-      post(ajaxUrl(form), 'TestConnection', {
-        api_url: form.querySelector('[name=api_url]').value,
-        api_login: form.querySelector('[name=api_login]').value,
-        api_password: form.querySelector('[name=api_password]').value
-      }).then(function (data) {
+      post(ajaxUrl(form), 'TestConnection', params).then(function (data) {
         result.hidden = false;
         result.className = 'injellik-test-result js-injellik-test-result alert ' + (data.ok ? 'alert-success' : 'alert-danger');
         result.textContent = data.message;

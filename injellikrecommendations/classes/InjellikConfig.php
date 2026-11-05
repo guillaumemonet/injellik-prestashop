@@ -222,6 +222,23 @@ class InjellikConfig
         }
     }
 
+    /**
+     * Back-office message of an API error, worded for the refusals the merchant can fix.
+     */
+    public static function apiErrorMessage(Exception $e, $translator)
+    {
+        if ($e instanceof InjellikApiException) {
+            if ($e->isSuspended()) {
+                return $translator->trans('Your Injellik subscription is suspended.', [], self::DOMAIN_ADMIN);
+            }
+            if ($e->isInvalidKey()) {
+                return $translator->trans('Invalid or revoked licence key.', [], self::DOMAIN_ADMIN);
+            }
+        }
+
+        return $e->getMessage();
+    }
+
     public static function isOnboarded($idShop = null)
     {
         return (bool) self::get(self::ONBOARDED, $idShop);

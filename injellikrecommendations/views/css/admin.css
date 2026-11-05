@@ -102,6 +102,13 @@
 .injellik-inline-form { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .injellik-test-result { margin-bottom: 10px; }
 
+/* Connection form */
+.injellik-licence-key { font-family: monospace; }
+.injellik-auth__links a { margin-right: 16px; }
+.injellik-auth__switch { margin: 12px 0 0; font-size: 12px; }
+.injellik-auth__switch a { color: var(--injellik-muted); }
+.injellik [hidden] { display: none !important; }
+
 /* Placements */
 .injellik-placement {
   border: 1px solid var(--injellik-border);
