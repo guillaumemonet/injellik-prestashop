@@ -32,6 +32,7 @@ Ce module connecte votre boutique à l'API **[Injellik](https://www.web-nest.fr/
 - [Tâche cron](#tâche-cron)
 - [Page de suivi](#page-de-suivi)
 - [Configuration avancée](#configuration-avancée)
+- [Mise à jour depuis la version 2.0](#mise-à-jour-depuis-la-version-20)
 - [Mise à jour depuis la version 1.x](#mise-à-jour-depuis-la-version-1x)
 - [Dépannage](#dépannage)
 - [Développement](#développement)
@@ -45,10 +46,10 @@ Ce module connecte votre boutique à l'API **[Injellik](https://www.web-nest.fr/
 - **Aucun impact sur les performances** :
   - les blocs se chargent après la page, ce qui les rend compatibles avec les caches de page complète ;
   - les événements passent par une file locale et sont envoyés après la réponse.
-- **Résilient** : une API lente ou indisponible ne ralentit ni ne casse jamais la boutique, y compris la validation des commandes. Les événements sont renvoyés automatiquement.
+- **Résilient** : une API lente ou indisponible, ou un abonnement suspendu, ne ralentit ni ne casse jamais la boutique, y compris la validation des commandes. Les événements sont renvoyés automatiquement.
 - **Page de suivi** : état de l'API, activité, taux de clic par bloc, file d'événements, produits phares.
 - **Respect de la vie privée** : les visiteurs sont identifiés par des identifiants pseudonymes, aucune donnée personnelle ne quitte la boutique.
-- **Multiboutique** (un compte Injellik par boutique) et **multilingue** (titres par langue, interface en français et en anglais).
+- **Multiboutique** (une clé de licence par boutique) et **multilingue** (titres par langue, interface en français et en anglais).
 
 ## Prérequis
 
@@ -56,7 +57,7 @@ Ce module connecte votre boutique à l'API **[Injellik](https://www.web-nest.fr/
 |---|---|
 | PrestaShop | 8.0 à 9.x (testé sur 8.2 avec le thème Classic et sur 9.0 avec Hummingbird) |
 | PHP | 7.2.5 à 8.4, extension cURL |
-| Compte Injellik | URL de l'API, identifiant et mot de passe ([demander un compte](https://www.web-nest.fr/injellik)) |
+| Licence | une clé de licence Injellik, obtenue avec un abonnement sur [web-nest.fr](https://web-nest.fr/#tarifs) |
 
 Un thème compatible PrestaShop 8 (qui fournit `catalog/_partials/productlist.tpl`) affiche les blocs sans adaptation.
 
@@ -82,10 +83,12 @@ L'assistant vous guide en six étapes. Le module ajoute ensuite le menu **Injell
 
 | Étape | Ce qui se passe |
 |---|---|
-| **Connexion** | URL de l'API, identifiant et mot de passe. Le bouton « Tester la connexion » vérifie que l'API répond et que les identifiants sont acceptés. |
+| **Connexion** | La clé de licence de la boutique (`ijk_lic_…`), affichée dans votre compte web-nest.fr ([Mon compte > Boutiques](https://web-nest.fr/mon-compte/boutiques/)). Le bouton « Tester la connexion » vérifie que l'API répond et accepte la clé. |
 | **Catalogue** | Les produits sont envoyés par lots de 100, avec une barre de progression. |
 | **Historique** | Import facultatif des commandes passées depuis une date donnée. Les recommandations « achetés ensemble » sont ainsi disponibles dès le prochain entraînement, sans attendre des semaines de suivi. |
 | **Blocs** | Choix des emplacements, des stratégies, du nombre de produits et des titres. |
+
+> **Compte créé avant les abonnements ?** Le lien « Utiliser un identifiant API », sous le formulaire, ouvre l'ancienne connexion (URL de l'API, identifiant et mot de passe). Les installations existantes l'utilisent automatiquement.
 
 <p align="center"><img src="docs/screenshots/catalog.png" alt="Assistant : synchronisation du catalogue" width="860"></p>
 
@@ -193,7 +196,9 @@ Chaque événement contient le type d'action, l'id produit et deux identifiants 
 - **`user_uuid`** :
   - pour un client connecté, une empreinte de son id (`c-…`), calculée avec la clé secrète de la boutique et non réversible ;
   - sinon, un identifiant aléatoire conservé dans le cookie PrestaShop (`v-…`).
-- **`user_session_uuid`** : identifiant de la visite, renouvelé après 30 minutes d'inactivité et après chaque commande.
+- **`user_session_uuid`** : identifiant de la visite, renouvelé après 30 minutes d'inactivité et après chaque commande. Une commande validée hors de la navigation du client (notification de paiement, commande saisie au back-office) a sa propre session, `order-<id>`.
+
+Les sessions servent de base à la facturation de l'abonnement : aucune n'est créée pour les robots (quand l'option « Ignorer les robots » est active) ni pour une requête sans cookie.
 
 **Ne sont jamais envoyés** : nom, e-mail, adresse, IP ou contenu des commandes (montants, adresses).
 
@@ -224,7 +229,7 @@ Elle est recommandée. L'URL, avec son jeton, se trouve dans **Paramètres > Don
 30 2 * * *   curl -s "https://votre-boutique.fr/module/injellikrecommendations/cron?token=XXXX&task=catalog" > /dev/null
 ```
 
-La réponse est un JSON, par exemple `{"events":{"sent":12,"failed":0,"pending":0},"purged":3}`.
+La réponse est un JSON, par exemple `{"events":{"sent":12,"failed":0,"pending":0},"purged":3}`. Si l'API refuse la boutique, elle contient aussi `"api":"suspended"` ou `"api":"invalid_key"`.
 
 ## Page de suivi
 
@@ -245,6 +250,7 @@ Ces réglages se trouvent dans **Paramètres > Avancé**.
 
 | Réglage | Défaut | Détail |
 |---|---|---|
+| URL de l'API | `https://injellik.web-nest.fr` | À ne modifier que sur demande de Web-Nest. |
 | Affichage des blocs | Asynchrone | « Dans la page » appelle l'API pendant la génération de la page : les blocs sont visibles sans JavaScript, mais la page est plus lente. |
 | Envoi des événements | Fin de requête | Choisissez « Tâche cron uniquement » si PHP tourne en mod_php sous Apache. |
 | Délai d'attente de l'API | 3 s | Pour les appels du front. Le back-office et le cron attendent jusqu'à 20 s. |
@@ -253,7 +259,13 @@ Ces réglages se trouvent dans **Paramètres > Avancé**.
 | Ignorer les robots | oui | Filtre sur le user-agent. |
 | Synchronisation automatique | oui | Envoie un produit à son enregistrement. |
 
-**Multiboutique** : sélectionnez une boutique dans le sélecteur multiboutique avant de la configurer. Chaque boutique peut utiliser son propre compte Injellik, et les événements comme les statistiques sont séparés par boutique.
+**Multiboutique** : sélectionnez une boutique dans le sélecteur multiboutique avant de la configurer. Chaque boutique a sa propre clé de licence, et les événements comme les statistiques sont séparés par boutique.
+
+## Mise à jour depuis la version 2.0
+
+Installez le nouveau zip par-dessus l'ancien module : l'identifiant et le mot de passe configurés continuent de fonctionner, sans action de votre part. Le script `upgrade/upgrade-2.1.0.php` renseigne l'URL de l'API si elle est vide et enregistre le hook de l'alerte d'abonnement.
+
+Pour passer à la clé de licence, ouvrez **Paramètres > Connexion**, cliquez sur « Utiliser une clé de licence », collez la clé et enregistrez.
 
 ## Mise à jour depuis la version 1.x
 
@@ -268,10 +280,12 @@ L'assistant s'ouvre à la visite suivante de la configuration : relancez la sync
 
 | Symptôme | Piste |
 |---|---|
-| « Tester la connexion » échoue | Vérifiez l'URL (sans `/api`), que le serveur de la boutique peut joindre l'API (pare-feu sortant), et les identifiants. |
+| « Tester la connexion » échoue | Vérifiez la clé de licence (ou l'identifiant et le mot de passe), l'URL de l'API dans **Paramètres > Avancé** (sans `/api`), et que le serveur de la boutique peut joindre l'API (pare-feu sortant). |
+| « Votre abonnement Injellik est suspendu » | Le paiement de l'abonnement a échoué. Régularisez-le sur [Mon compte > Abonnement](https://web-nest.fr/mon-compte/abonnement/). En attendant, les blocs sont masqués et les événements sont conservés dans la boutique. Le module vérifie de nouveau toutes les 15 minutes, et à chaque enregistrement de la configuration ; tout repart seul dès que l'abonnement est réactivé. |
+| « Clé de licence invalide ou révoquée » | La clé a été mal copiée, régénérée ou supprimée. Copiez la clé actuelle de la boutique depuis [Mon compte > Boutiques](https://web-nest.fr/mon-compte/boutiques/) et enregistrez-la dans **Paramètres > Connexion**. |
 | Aucun bloc ne s'affiche | Le thème doit appeler le hook (`displayFooterProduct`…). Vérifiez dans **Apparence > Positions** que le module y est greffé et que l'emplacement est activé. Un bloc sans produit à afficher est retiré de la page. |
 | Les blocs n'utilisent que la stratégie de repli | C'est normal tant que l'API n'a pas été entraînée sur assez de données (au moins deux sessions communes pour « consultés ensemble »). |
-| Des événements restent « en attente » | Consultez la dernière erreur sur la page de suivi, puis planifiez la tâche cron. |
+| Des événements restent « en attente » | Consultez la dernière erreur sur la page de suivi, puis planifiez la tâche cron. Après une suspension, la tâche cron envoie les événements conservés. |
 | Les boutons « liste d'envies » manquent sur les miniatures | Les modules qui initialisent les miniatures au chargement de la page doivent écouter l'événement `injellik:loaded`. |
 
 ## Développement
@@ -289,7 +303,7 @@ Back-office : `/admin-dev`, `demo@prestashop.com` / `prestashop_demo`. Une API l
 injellikrecommendations/
 ├── injellikrecommendations.php      Module : hooks de suivi, widget
 ├── classes/
-│   ├── InjellikApiClient.php        Client HTTP (JWT en cache, renouvelé sur 401)
+│   ├── InjellikApiClient.php        Client HTTP (clé de licence, ou JWT en cache renouvelé sur 401)
 │   ├── InjellikConfig.php           Configuration, emplacements, stratégies
 │   ├── InjellikEventQueue.php       File locale et envoi des événements
 │   ├── InjellikIdentity.php         Identifiants visiteur et session

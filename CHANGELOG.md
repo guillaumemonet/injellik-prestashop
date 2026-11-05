@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.1.0] - 2026-11-05
+
+Injellik est désormais vendu sur abonnement sur [web-nest.fr](https://web-nest.fr/#tarifs). Les installations existantes (identifiant et mot de passe) continuent de fonctionner sans action.
+
+### Ajouté
+- Connexion par **clé de licence** (`ijk_lic_…`, une par boutique), mode par défaut : en-tête `X-Api-Key`, sans appel à `/api/login`. Le format de la clé est vérifié avant l'enregistrement.
+- Assistant et onglet Connexion : la clé de licence seule, avec les liens « Obtenir une clé » et « Retrouver ma clé ». L'identifiant et le mot de passe restent accessibles par « Utiliser un identifiant API ».
+- Abonnement suspendu (403 `tenant_suspended`) ou clé invalide (401) :
+  - les blocs de recommandations sont masqués et la boutique n'appelle plus l'API, avec un nouvel essai au plus toutes les 15 minutes et à chaque enregistrement de la configuration ;
+  - les événements restent dans la file locale, sans consommer leurs essais, et partent dès que l'API accepte de nouveau la boutique ;
+  - bandeau sur les pages du module et rappel sobre sur les autres pages du back-office (hook `displayDashboardTop`), avec un lien vers l'abonnement ou vers les boutiques du compte web-nest.fr.
+- URL de l'API dans l'onglet Avancé.
+
+### Modifié
+- L'URL de l'API est préremplie avec `https://injellik.web-nest.fr` (le script de mise à jour la renseigne si elle est vide).
+- Le test de connexion appelle `GET /api/usage` dans les deux modes.
+- Une commande validée hors de la navigation du client (notification de paiement, commande créée au back-office) reçoit la session `order-<id>` au lieu d'une session aléatoire. Les sessions servant désormais de base à la facturation, aucune n'est créée pour une requête qui n'est pas une visite.
+- Types nullables explicites : plus d'avertissement de dépréciation sous PHP 8.4.
+
 ## [2.0.0] - 2026-11-03
 
 Réécriture complète du module.

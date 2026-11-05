@@ -28,7 +28,7 @@ class InjellikRecommendations extends Module implements WidgetInterface
     {
         $this->name = 'injellikrecommendations';
         $this->tab = 'advertising_marketing';
-        $this->version = '2.0.0';
+        $this->version = '2.1.0';
         $this->author = 'Web-Nest';
         $this->need_instance = 0;
         $this->bootstrap = true;
