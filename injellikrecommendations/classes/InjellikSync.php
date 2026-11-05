@@ -192,7 +192,7 @@ class InjellikSync
     public static function importOrdersBatch($idShop, $afterId, $since = null, $batch = self::ORDERS_BATCH)
     {
         $orders = Db::getInstance()->executeS(
-            'SELECT `id_order`, `id_customer` FROM `' . _DB_PREFIX_ . 'orders`
+            'SELECT `id_order`, `id_customer`, `date_add` FROM `' . _DB_PREFIX_ . 'orders`
              WHERE ' . self::ordersWhere($idShop, $afterId, $since) . '
              ORDER BY `id_order` LIMIT ' . (int) $batch
         ) ?: [];
@@ -211,9 +211,12 @@ class InjellikSync
         }
 
         $client = InjellikApiClient::forShop($idShop);
+        // The API refuses actions dated more than 3 years ago: older orders are skipped.
+        $oldest = strtotime('-3 years +1 day');
         foreach ($orders as $order) {
             $idOrder = (int) $order['id_order'];
-            $products = isset($lines[$idOrder]) ? $lines[$idOrder] : [];
+            $orderedAt = strtotime((string) $order['date_add']);
+            $products = isset($lines[$idOrder]) && $orderedAt && $orderedAt >= $oldest ? $lines[$idOrder] : [];
             foreach ($products as $idProduct => $name) {
                 try {
                     $client->sendAction([
@@ -222,6 +225,9 @@ class InjellikSync
                         'user_uuid' => InjellikIdentity::customerUuid((int) $order['id_customer']),
                         'user_session_uuid' => 'order-' . $idOrder,
                         'name' => Tools::substr((string) $name, 0, 255),
+                        // History import: real order date, and not counted as a billable session.
+                        'source' => 'import',
+                        'occurred_at' => date('c', $orderedAt),
                     ]);
                     ++$result['sent'];
                 } catch (InjellikApiException $e) {

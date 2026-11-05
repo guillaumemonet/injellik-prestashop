@@ -5,6 +5,7 @@
 Injellik est désormais vendu sur abonnement sur [web-nest.fr](https://web-nest.fr/#tarifs). Les installations existantes (identifiant et mot de passe) continuent de fonctionner sans action.
 
 ### Ajouté
+- Import de l'historique de commandes : chaque achat est envoyé avec sa date réelle (`occurred_at`) et marqué `source: import`, donc non compté dans les sessions facturées. Les commandes de plus de 3 ans sont ignorées (refusées par l'API).
 - Connexion par **clé de licence** (`ijk_lic_…`, une par boutique), mode par défaut : en-tête `X-Api-Key`, sans appel à `/api/login`. Le format de la clé est vérifié avant l'enregistrement.
 - Assistant et onglet Connexion : la clé de licence seule, avec les liens « Obtenir une clé » et « Retrouver ma clé ». L'identifiant et le mot de passe restent accessibles par « Utiliser un identifiant API ».
 - Abonnement suspendu (403 `tenant_suspended`) ou clé invalide (401) :
