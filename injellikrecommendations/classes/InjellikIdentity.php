@@ -66,6 +66,17 @@ class InjellikIdentity
     }
 
     /**
+     * True when the current request comes from a visitor whose browsing session is known
+     * (false for a payment notification sent by a server, a back-office order...).
+     */
+    public static function hasSession(Context $context = null)
+    {
+        $context = $context ?: Context::getContext();
+
+        return $context->cookie && (string) $context->cookie->{self::COOKIE_SESSION} !== '';
+    }
+
+    /**
      * Creates the identifiers and extends the session. Call it before any output so that the cookie can be sent.
      */
     public static function touch(Context $context = null)

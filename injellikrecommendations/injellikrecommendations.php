@@ -150,12 +150,18 @@ class InjellikRecommendations extends Module implements WidgetInterface
         /** @var Order $order */
         $order = $params['order'];
         $user = InjellikIdentity::customerUuid((int) $order->id_customer);
-        $session = InjellikIdentity::sessionUuid($this->context);
+        // The order joins the browsing session of the customer. When it is validated outside of it
+        // (payment notification, back-office order), it gets a session of its own, as in the history
+        // import, instead of a random one created for a request that is not a visit.
+        $visit = InjellikIdentity::hasSession($this->context);
+        $session = $visit ? InjellikIdentity::sessionUuid($this->context) : 'order-' . (int) $order->id;
 
         foreach ($order->getProducts() as $line) {
             InjellikEventQueue::push((int) $order->id_shop, 'BUY', (string) $line['product_id'], $user, $session, $line['product_name']);
         }
-        InjellikIdentity::resetSession($this->context);
+        if ($visit) {
+            InjellikIdentity::resetSession($this->context);
+        }
     }
 
     /**
@@ -178,9 +184,14 @@ class InjellikRecommendations extends Module implements WidgetInterface
         );
     }
 
+    /**
+     * Sessions are the basis of the subscription billing: nothing is tracked for the bots (when they are
+     * excluded), nor without a cookie, where every action would create a new visitor and a new session.
+     */
     private function isTrackingEnabled()
     {
         return InjellikConfig::isConfigured()
+            && $this->context->cookie
             && !(InjellikConfig::get(InjellikConfig::EXCLUDE_BOTS) && InjellikIdentity::isBot());
     }
 
