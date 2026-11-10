@@ -63,7 +63,7 @@ Un thème compatible PrestaShop 8 (qui fournit `catalog/_partials/productlist.tp
 
 ## Installation
 
-1. Téléchargez **`injellikrecommendations-x.y.z.zip`** depuis la [dernière release](https://github.com/guillaumemonet/injellik-prestashop/releases/latest).
+1. Téléchargez **`injellikrecommendations-x.y.z.zip`** depuis la [dernière release](https://github.com/guillaumemonet/injellik-prestashop/releases/latest). Ce lien direct mène toujours à la dernière version : [`injellikrecommendations.zip`](https://github.com/guillaumemonet/injellik-prestashop/releases/latest/download/injellikrecommendations.zip).
    > N'utilisez pas « Download ZIP » de GitHub : cette archive contient tout le dépôt, et non le seul dossier du module.
 2. Dans le back-office, ouvrez **Modules > Gestionnaire de modules > Installer un module** et déposez le zip.
 3. Cliquez sur **Configurer** : l'assistant démarre.
