@@ -84,22 +84,49 @@
     data.append('id_product', miniature.getAttribute('data-id-product'));
     data.append('placement', block.getAttribute('data-injellik-placement'));
     data.append('token', config.token || '');
-
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(config.trackUrl, data);
-    } else {
-      fetch(config.trackUrl, { method: 'POST', body: data, credentials: 'same-origin', keepalive: true });
+    if (config.flush) {
+      data.append('flush', '1');
     }
+    beacon(data);
+  }
+
+  function beacon(data) {
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(config.trackUrl, data);
+      } else {
+        fetch(config.trackUrl, { method: 'POST', body: data, credentials: 'same-origin', keepalive: true }).catch(function () {});
+      }
+    } catch (e) {
+      // Tracking must never disturb the page.
+    }
+  }
+
+  // Servers that cannot send the events after the response (no PHP-FPM): ask for it in a request nobody waits for.
+  var flushTimer = null;
+  function flush() {
+    if (!config.flush || !config.trackUrl) {
+      return;
+    }
+    clearTimeout(flushTimer);
+    flushTimer = setTimeout(function () {
+      var data = new FormData();
+      data.append('flush', '1');
+      data.append('token', config.token || '');
+      beacon(data);
+    }, 1000);
   }
 
   function init() {
     scan(document);
     document.addEventListener('click', trackClick, true);
+    flush();
     // Blocks re-rendered by the theme (cart update, product variant change...).
     if (window.prestashop && typeof window.prestashop.on === 'function') {
       ['updatedCart', 'updatedProduct', 'updateProductList'].forEach(function (name) {
         window.prestashop.on(name, function () { setTimeout(scan, 0); });
       });
+      window.prestashop.on('updatedCart', flush);
     }
   }
 

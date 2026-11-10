@@ -62,6 +62,19 @@ class AdminInjellikDashboardController extends ModuleAdminController
     public function postProcess()
     {
         $idShop = (int) $this->context->shop->id;
+        $change = $this->ajax || Tools::isSubmit('submitInjellikRetryErrors') || Tools::isSubmit('submitInjellikClearError');
+        if ($change && !$this->access('edit')) {
+            $message = $this->trans('You do not have permission to edit this.', [], 'Admin.Notifications.Error');
+            if ($this->ajax) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['ok' => false, 'done' => true, 'message' => $message]);
+                exit;
+            }
+            $this->errors[] = $message;
+
+            return false;
+        }
+
         if (Tools::isSubmit('submitInjellikRetryErrors')) {
             InjellikEventQueue::retryErrors($idShop);
             Tools::redirectAdmin($this->context->link->getAdminLink('AdminInjellikDashboard') . '&conf=4');

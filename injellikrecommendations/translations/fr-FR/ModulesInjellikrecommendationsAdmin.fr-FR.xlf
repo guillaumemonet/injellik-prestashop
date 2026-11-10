@@ -678,6 +678,14 @@
         <source>Text displayed above the products</source>
         <target>Texte affiché au-dessus des produits</target>
       </trans-unit>
+      <trans-unit id="d80dd6ab24516482f80bbf96f1fef357">
+        <source>The API URL is not valid: it must start with https://.</source>
+        <target>L'URL de l'API n'est pas valide : elle doit commencer par https://.</target>
+      </trans-unit>
+      <trans-unit id="13c54eb89da66b06c5df8d1e94991480">
+        <source>Changing this address clears the stored licence key and password: enter them again in the Connection tab.</source>
+        <target>Changer cette adresse efface la clé de licence et le mot de passe enregistrés : saisissez-les à nouveau dans l'onglet Connexion.</target>
+      </trans-unit>
       <trans-unit id="78ed7c8714ad7dda735e61352199bd8a">
         <source>The API URL is not valid.</source>
         <target>L'URL de l'API n'est pas valide.</target>

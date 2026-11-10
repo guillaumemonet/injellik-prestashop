@@ -212,8 +212,10 @@ Les produits créés, modifiés ou supprimés sont synchronisés automatiquement
 
 **File locale.** Les hooks n'appellent jamais l'API : ils écrivent une ligne dans `ps_injellik_event`. Les événements partent ensuite :
 
-- **à la fin de la requête** (par défaut) : avec PHP-FPM, après l'envoi de la page au visiteur ;
+- **à la fin de la requête** (par défaut) : avec PHP-FPM ou LiteSpeed, une fois la page envoyée au visiteur. Sans eux (Apache mod_php), le navigateur demande l'envoi juste après, par une requête en arrière-plan que personne n'attend ;
 - **ou par la tâche cron**.
+
+Le visiteur n'attend jamais l'API, même lorsqu'elle est lente ou injoignable. Une erreur du module est consignée dans les journaux de PrestaShop (**Paramètres avancés > Logs**) et n'interrompt jamais la page, le panier ou la commande.
 
 En cas d'erreur réseau ou serveur, un événement est retenté jusqu'à 5 fois. Les événements envoyés sont purgés après 30 jours. Les visites des robots sont ignorées.
 
@@ -227,6 +229,12 @@ Elle est recommandée. L'URL, avec son jeton, se trouve dans **Paramètres > Don
 
 # Synchronisation complète du catalogue (facultatif, chaque nuit)
 30 2 * * *   curl -s "https://votre-boutique.fr/module/injellikrecommendations/cron?token=XXXX&task=catalog" > /dev/null
+```
+
+Pour que le jeton n'apparaisse pas dans les journaux d'accès du serveur, il peut aussi être passé dans un en-tête :
+
+```cron
+*/10 * * * * curl -s -H "X-Injellik-Token: XXXX" "https://votre-boutique.fr/module/injellikrecommendations/cron" > /dev/null
 ```
 
 La réponse est un JSON, par exemple `{"events":{"sent":12,"failed":0,"pending":0},"purged":3}`. Si l'API refuse la boutique, elle contient aussi `"api":"suspended"` ou `"api":"invalid_key"`.

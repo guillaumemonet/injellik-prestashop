@@ -110,7 +110,10 @@ class InjellikRecommender
             return '';
         }
 
-        InjellikStats::impression((int) $this->context->shop->id, $request['placement']);
+        // Requests without a visit (scripts replaying a block, bots without cookie) are not counted.
+        if (InjellikIdentity::isKnownVisitor($this->context)) {
+            InjellikStats::impression((int) $this->context->shop->id, $request['placement']);
+        }
         $this->context->smarty->assign('injellik', [
             'placement' => $request['placement'],
             'title' => $request['title'],
@@ -160,6 +163,11 @@ class InjellikRecommender
         }
         $context = $strategies[$strategy]['context'];
         if ($context === 'items' && !$productIds) {
+            return [];
+        }
+        // Personal strategies only for a known visit: a request without cookie would create a new visitor,
+        // an uncached API call and a cache file each time. The fallback strategy is used instead.
+        if ($context === 'user' && !InjellikIdentity::isKnownVisitor($this->context)) {
             return [];
         }
 
@@ -268,9 +276,16 @@ class InjellikRecommender
         $hideOutOfStock = (bool) InjellikConfig::get(InjellikConfig::HIDE_OUT_OF_STOCK)
             && Configuration::get('PS_STOCK_MANAGEMENT');
 
+        // Products of categories restricted to other customer groups (B2B, private sales) are not shown.
+        $checkGroups = Group::isFeatureActive();
+        $idCustomer = $this->context->customer ? (int) $this->context->customer->id : 0;
+
         $result = [];
         foreach ($ids as $id) {
             if (!in_array($id, $visible, true)) {
+                continue;
+            }
+            if ($checkGroups && !Product::checkAccessStatic($id, $idCustomer)) {
                 continue;
             }
             if ($hideOutOfStock

@@ -24,6 +24,9 @@ class InjellikrecommendationsRecommendationsModuleFrontController extends Module
         // Assigns the variables the product miniature template needs ($urls, $configuration...).
         parent::initContent();
 
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respond(['html' => ''], 405);
+        }
         $request = InjellikRecommender::decodeRequest(Tools::getValue('payload'), Tools::getValue('signature'));
         if ($request === null) {
             $this->respond(['html' => ''], 400);
@@ -32,8 +35,8 @@ class InjellikrecommendationsRecommendationsModuleFrontController extends Module
         $html = '';
         try {
             $html = (new InjellikRecommender($this->module, $this->context))->renderProducts($request);
-        } catch (Exception $e) {
-            PrestaShopLogger::addLog('[Injellik] Block rendering failed: ' . $e->getMessage(), 2, null, 'Module', 0, true);
+        } catch (Throwable $e) {
+            PrestaShopLogger::addLog('[Injellik] Block rendering failed: ' . $e->getMessage(), 2, null, 'Module', 0, false);
         }
 
         $this->respond(['html' => $html]);

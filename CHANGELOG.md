@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.1.1] - 2026-11-10
+
+### Corrigé
+- **Ajout au panier impossible avec PHP-FPM** : la popup et le panier restaient vides. Le module libérait la réponse (`fastcgi_finish_request`) avant que PrestaShop écrive son cookie : le visiteur perdait son panier, sa connexion et son identifiant de visite. Le cookie et la session sont désormais écrits avant, et l'envoi des événements passe après tous les autres traitements de fin de requête.
+- Sans PHP-FPM (Apache mod_php), les événements ne sont plus envoyés pendant la requête du visiteur : le navigateur demande leur envoi juste après (`sendBeacon`), et une API lente ne ralentit plus aucune page.
+
+### Modifié
+- Tous les hooks sont protégés : une erreur du module est consignée dans les journaux et n'interrompt jamais la page, le panier ou la commande.
+
+### Sécurité
+- Clics : une requête sans cookie de visite (script) n'enregistre plus de clic ni d'événement. Seuls les produits actifs et visibles sont acceptés, et le jeton est comparé en temps constant.
+- Blocs : le rendu n'accepte que des requêtes POST. Les stratégies personnalisées et le comptage des affichages sont réservés aux visiteurs connus, ce qui empêche de multiplier les appels à l'API et les fichiers de cache en rejouant un bloc.
+- Les produits des catégories réservées à d'autres groupes de clients (B2B, ventes privées) ne sont plus recommandés.
+- Back-office :
+  - l'URL de l'API doit être en `https://` (`http://` reste accepté en mode debug) ;
+  - la clé de licence et le mot de passe enregistrés ne sont plus jamais envoyés à une autre URL que la leur, et changer l'URL efface ces secrets ;
+  - les actions exigent la permission de modification ;
+  - les messages d'erreur renvoyés par l'API sont affichés comme du texte.
+- Cron : le jeton peut être passé dans l'en-tête `X-Injellik-Token`, pour ne pas apparaître dans les journaux d'accès.
+
 ## [2.1.0] - 2026-11-05
 
 Injellik est désormais vendu sur abonnement sur [web-nest.fr](https://web-nest.fr/#tarifs). Les installations existantes (identifiant et mot de passe) continuent de fonctionner sans action.

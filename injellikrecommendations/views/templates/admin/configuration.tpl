@@ -172,6 +172,7 @@
                    placeholder="{$injellik.connection.default_url|escape:'html':'UTF-8'}"
                    value="{$injellik.connection.url|escape:'html':'UTF-8'}">
             <p class="help-block">{l s='Keep the default address (%url%) unless Web-Nest asks you to change it.' sprintf=['%url%' => $injellik.connection.default_url] d='Modules.Injellikrecommendations.Admin'}</p>
+            <p class="help-block">{l s='Changing this address clears the stored licence key and password: enter them again in the Connection tab.' d='Modules.Injellikrecommendations.Admin'}</p>
           </div>
         </div>
 

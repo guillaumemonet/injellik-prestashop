@@ -74,18 +74,36 @@ class InjellikEventQueue
     }
 
     /**
-     * Shutdown handler: hands the response to the visitor first when PHP-FPM allows it.
+     * Shutdown handler. It only registers the real sending as the very last shutdown function, so that the
+     * shutdown functions of PrestaShop and of the other modules still run before the response is released.
      */
     public static function sendAfterResponse()
+    {
+        if (self::$created) {
+            register_shutdown_function([__CLASS__, 'releaseAndSend']);
+        }
+    }
+
+    /**
+     * Hands the response to the visitor, then sends the events of the request.
+     */
+    public static function releaseAndSend()
     {
         if (!self::$created) {
             return;
         }
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        }
         $ids = self::$created;
         self::$created = [];
+
+        try {
+            self::releaseResponse();
+        } catch (Throwable $e) {
+            // Without releasing the response, the events are left to the cron task: the visitor must not wait.
+            return;
+        }
+        if (!self::$released) {
+            return;
+        }
 
         try {
             $rows = Db::getInstance()->executeS(
@@ -95,9 +113,75 @@ class InjellikEventQueue
                  ORDER BY `id_injellik_event`'
             );
             self::sendRows($rows ?: []);
-        } catch (Exception $e) {
-            PrestaShopLogger::addLog('[Injellik] ' . $e->getMessage(), 2, null, 'Module', 0, true);
+        } catch (Throwable $e) {
+            PrestaShopLogger::addLog('[Injellik] ' . $e->getMessage(), 2, null, 'Module', 0, false);
         }
+    }
+
+    /** @var bool */
+    private static $released = false;
+
+    /**
+     * Ends the response before the network calls.
+     *
+     * PrestaShop writes its cookie (cart, customer, language...) when the Cookie object is destroyed, that is
+     * after the shutdown functions: once the response is released, it could no longer be sent and the visitor
+     * would lose the cart he has just filled. The cookie and the PHP session are therefore written first.
+     *
+     * Without fastcgi_finish_request() / litespeed_finish_request() (mod_php...), the response cannot be released
+     * early: the events stay pending and are sent by the cron task or a later request, instead of making the
+     * visitor wait for the API.
+     */
+    public static function canReleaseResponse()
+    {
+        return function_exists('fastcgi_finish_request') || function_exists('litespeed_finish_request');
+    }
+
+    /**
+     * Sends the pending events of one visitor (requested by front.js with sendBeacon when the server cannot
+     * release the response early: nobody waits for that request).
+     */
+    public static function flushVisitor($idShop, $userUuid, $limit = 10)
+    {
+        if ((string) $userUuid === '' || InjellikConfig::isApiBlocked($idShop)) {
+            return;
+        }
+        $rows = Db::getInstance()->executeS(sprintf(
+            "SELECT * FROM `%s` WHERE `status` = '%s' AND `id_shop` = %d AND `user_uuid` = '%s' ORDER BY `id_injellik_event` LIMIT %d",
+            _DB_PREFIX_ . self::TABLE,
+            self::STATUS_PENDING,
+            (int) $idShop,
+            pSQL($userUuid),
+            max(1, (int) $limit)
+        ));
+        self::sendRows($rows ?: []);
+    }
+
+    private static function releaseResponse()
+    {
+        if (function_exists('fastcgi_finish_request')) {
+            $finish = 'fastcgi_finish_request';
+        } elseif (function_exists('litespeed_finish_request')) {
+            $finish = 'litespeed_finish_request';
+        } else {
+            return;
+        }
+        // A fatal error ends the request in its own way.
+        $error = error_get_last();
+        if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+            return;
+        }
+
+        $context = Context::getContext();
+        if ($context && $context->cookie instanceof Cookie && !headers_sent()) {
+            $context->cookie->write();
+        }
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        $finish();
+        self::$released = true;
     }
 
     /**

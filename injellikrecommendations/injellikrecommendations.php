@@ -28,7 +28,7 @@ class InjellikRecommendations extends Module implements WidgetInterface
     {
         $this->name = 'injellikrecommendations';
         $this->tab = 'advertising_marketing';
-        $this->version = '2.1.0';
+        $this->version = '2.1.1';
         $this->author = 'Web-Nest';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -74,6 +74,13 @@ class InjellikRecommendations extends Module implements WidgetInterface
      */
     public function hookDisplayDashboardTop()
     {
+        return $this->safely(function () {
+            return $this->renderApiStateNotice();
+        }, '');
+    }
+
+    private function renderApiStateNotice()
+    {
         $controller = $this->context->controller;
         if (!isset($this->context->employee) || !$this->context->employee || $controller instanceof AdminInjellikConfigurationController
             || $controller instanceof AdminInjellikDashboardController) {
@@ -104,6 +111,13 @@ class InjellikRecommendations extends Module implements WidgetInterface
      */
     public function hookActionFrontControllerSetMedia()
     {
+        $this->safely(function () {
+            $this->setFrontMedia();
+        });
+    }
+
+    private function setFrontMedia()
+    {
         if (!InjellikConfig::isConfigured()) {
             return;
         }
@@ -115,6 +129,9 @@ class InjellikRecommendations extends Module implements WidgetInterface
             'renderUrl' => $this->context->link->getModuleLink($this->name, 'recommendations', [], null, null, null, true),
             'trackUrl' => $this->context->link->getModuleLink($this->name, 'track', [], null, null, null, true),
             'token' => Tools::getToken(false),
+            // Without fastcgi_finish_request(), the events are not sent during the request (the visitor would
+            // wait for the API): the script asks for it afterwards, in a request nobody waits for.
+            'flush' => !InjellikEventQueue::canReleaseResponse() && InjellikConfig::get(InjellikConfig::SEND_MODE) !== InjellikConfig::SEND_CRON,
         ]]);
 
         if (!$this->isTrackingEnabled()) {
@@ -133,6 +150,13 @@ class InjellikRecommendations extends Module implements WidgetInterface
 
     public function hookActionCartUpdateQuantityBefore($params)
     {
+        $this->safely(function () use ($params) {
+            $this->trackCartUpdate($params);
+        });
+    }
+
+    private function trackCartUpdate($params)
+    {
         if (!$this->isTrackingEnabled() || (isset($params['operator']) && $params['operator'] !== 'up')) {
             return;
         }
@@ -143,6 +167,13 @@ class InjellikRecommendations extends Module implements WidgetInterface
     }
 
     public function hookActionValidateOrder($params)
+    {
+        $this->safely(function () use ($params) {
+            $this->trackOrder($params);
+        });
+    }
+
+    private function trackOrder($params)
     {
         if (!InjellikConfig::isConfigured() || empty($params['order']) || !$params['order'] instanceof Order) {
             return;
@@ -216,8 +247,29 @@ class InjellikRecommendations extends Module implements WidgetInterface
 
     private function markProductDirty($params)
     {
-        if (!empty($params['object']) && $params['object'] instanceof Product && InjellikConfig::isConfigured()) {
-            InjellikSync::markProductDirty((int) $params['object']->id);
+        $this->safely(function () use ($params) {
+            if (!empty($params['object']) && $params['object'] instanceof Product && InjellikConfig::isConfigured()) {
+                InjellikSync::markProductDirty((int) $params['object']->id);
+            }
+        });
+    }
+
+    /**
+     * The module must never break the shop: an error in a hook is logged and the hook is skipped.
+     *
+     * @param mixed $default value returned on error
+     */
+    private function safely(callable $callback, $default = null)
+    {
+        try {
+            return $callback();
+        } catch (Throwable $e) {
+            try {
+                PrestaShopLogger::addLog('[Injellik] ' . get_class($e) . ': ' . $e->getMessage() . ' (' . basename($e->getFile()) . ':' . $e->getLine() . ')', 3, null, 'Module', 0, false);
+            } catch (Throwable $ignored) {
+            }
+
+            return $default;
         }
     }
 
@@ -259,15 +311,21 @@ class InjellikRecommendations extends Module implements WidgetInterface
      */
     public function renderWidget($hookName, array $configuration)
     {
-        $variables = $this->getWidgetVariables($hookName, $configuration);
-        if (!$variables) {
-            return '';
-        }
+        return $this->safely(function () use ($hookName, $configuration) {
+            $variables = $this->buildWidgetVariables($hookName, $configuration);
 
-        return (new InjellikRecommender($this, $this->context))->renderBlock($variables['request']);
+            return $variables ? (new InjellikRecommender($this, $this->context))->renderBlock($variables['request']) : '';
+        }, '');
     }
 
     public function getWidgetVariables($hookName, array $configuration)
+    {
+        return $this->safely(function () use ($hookName, $configuration) {
+            return $this->buildWidgetVariables($hookName, $configuration);
+        }, []);
+    }
+
+    private function buildWidgetVariables($hookName, array $configuration)
     {
         // Suspended subscription or invalid licence key: no block, without calling the API.
         if (!InjellikConfig::isConfigured() || InjellikConfig::isApiBlocked((int) $this->context->shop->id)) {

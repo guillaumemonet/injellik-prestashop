@@ -20,13 +20,25 @@ if (!defined('_PS_VERSION_')) {
  */
 class InjellikrecommendationsCronModuleFrontController extends ModuleFrontController
 {
+    /**
+     * Token of the query string, or of the X-Injellik-Token header (kept out of the access logs).
+     */
+    private function token()
+    {
+        if (!empty($_SERVER['HTTP_X_INJELLIK_TOKEN'])) {
+            return (string) $_SERVER['HTTP_X_INJELLIK_TOKEN'];
+        }
+
+        return (string) Tools::getValue('token');
+    }
+
     public function postProcess()
     {
         header('Content-Type: application/json; charset=utf-8');
         header('X-Robots-Tag: noindex');
 
         $expected = (string) InjellikConfig::get(InjellikConfig::CRON_TOKEN);
-        if ($expected === '' || !hash_equals($expected, (string) Tools::getValue('token'))) {
+        if ($expected === '' || !hash_equals($expected, $this->token())) {
             http_response_code(403);
             echo json_encode(['error' => 'Invalid token']);
             exit;

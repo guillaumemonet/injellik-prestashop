@@ -89,6 +89,17 @@ class AdminInjellikConfigurationController extends ModuleAdminController
 
     public function postProcess()
     {
+        // The pages can be viewed with the "view" permission; every change needs "edit".
+        if (($this->ajax || $this->isChangeSubmitted()) && !$this->access('edit')) {
+            $message = $this->trans('You do not have permission to edit this.', [], 'Admin.Notifications.Error');
+            if ($this->ajax) {
+                $this->json(['ok' => false, 'message' => $message]);
+            }
+            $this->errors[] = $message;
+
+            return false;
+        }
+
         if (Tools::isSubmit('submitInjellikConnection')) {
             $this->processConnection();
         } elseif (Tools::isSubmit('submitInjellikPlacements')) {
@@ -108,6 +119,30 @@ class AdminInjellikConfigurationController extends ModuleAdminController
         }
 
         return parent::postProcess();
+    }
+
+    private function isChangeSubmitted()
+    {
+        foreach (['Connection', 'Placements', 'Advanced', 'RegenerateCronToken', 'ResetHistory', 'FinishOnboarding'] as $form) {
+            if (Tools::isSubmit('submitInjellik' . $form)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * The credentials travel to this URL: HTTPS only (plain HTTP is accepted in debug mode, for a local API).
+     */
+    private static function isAllowedUrl($url)
+    {
+        if (!Validate::isAbsoluteUrl($url)) {
+            return false;
+        }
+        $scheme = Tools::strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return $scheme === 'https' || ($scheme === 'http' && _PS_MODE_DEV_);
     }
 
     private function processConnection()
@@ -143,7 +178,8 @@ class AdminInjellikConfigurationController extends ModuleAdminController
             InjellikConfig::allowApiRetry($idShop);
         }
         if (!$test['ok']) {
-            $this->errors[] = $test['message'];
+            // The message may contain text of the API: it is displayed as text.
+            $this->errors[] = Tools::htmlentitiesUTF8($test['message']);
 
             return;
         }
@@ -154,21 +190,26 @@ class AdminInjellikConfigurationController extends ModuleAdminController
     /**
      * Connection settings posted by the form, completed with the stored values (empty secret = unchanged).
      *
+     * The stored secrets are only reused for the stored API URL: they are never sent to another address.
+     *
      * @return array{mode: string, url: string, licence_key: string, login: string, password: string}
      */
     private function postedCredentials()
     {
+        $storedUrl = InjellikApiClient::normalizeUrl(InjellikConfig::apiUrl());
         $url = trim((string) Tools::getValue('api_url'));
+        $url = $url !== '' ? InjellikApiClient::normalizeUrl($url) : $storedUrl;
+        $reuse = $url === $storedUrl;
         $licenceKey = InjellikConfig::normalizeLicenceKey(Tools::getValue('licence_key'));
         $login = Tools::getValue('api_login');
         $password = (string) Tools::getValue('api_password');
 
         return [
             'mode' => Tools::getValue('auth_mode') === self::MODE_LOGIN ? self::MODE_LOGIN : self::MODE_LICENCE,
-            'url' => $url !== '' ? InjellikApiClient::normalizeUrl($url) : InjellikApiClient::normalizeUrl(InjellikConfig::apiUrl()),
-            'licence_key' => $licenceKey !== '' ? $licenceKey : (string) InjellikConfig::get(InjellikConfig::LICENCE_KEY),
+            'url' => $url,
+            'licence_key' => $licenceKey !== '' || !$reuse ? $licenceKey : (string) InjellikConfig::get(InjellikConfig::LICENCE_KEY),
             'login' => $login !== false ? trim((string) $login) : (string) InjellikConfig::get(InjellikConfig::API_LOGIN),
-            'password' => $password !== '' ? $password : (string) InjellikConfig::get(InjellikConfig::API_PASSWORD),
+            'password' => $password !== '' || !$reuse ? $password : (string) InjellikConfig::get(InjellikConfig::API_PASSWORD),
         ];
     }
 
@@ -179,8 +220,8 @@ class AdminInjellikConfigurationController extends ModuleAdminController
     {
         $d = InjellikConfig::DOMAIN_ADMIN;
         $errors = [];
-        if (!Validate::isAbsoluteUrl($credentials['url'])) {
-            $errors[] = $this->trans('The API URL is not valid.', [], $d);
+        if (!self::isAllowedUrl($credentials['url'])) {
+            $errors[] = $this->trans('The API URL is not valid: it must start with https://.', [], $d);
         }
         if ($credentials['mode'] === self::MODE_LICENCE) {
             if ($credentials['licence_key'] === '') {
@@ -225,13 +266,17 @@ class AdminInjellikConfigurationController extends ModuleAdminController
     {
         $url = trim((string) Tools::getValue('api_url'));
         $url = InjellikApiClient::normalizeUrl($url !== '' ? $url : InjellikConfig::DEFAULT_API_URL);
-        if (!Validate::isAbsoluteUrl($url)) {
-            $this->errors[] = $this->trans('The API URL is not valid.', [], InjellikConfig::DOMAIN_ADMIN);
+        if (!self::isAllowedUrl($url)) {
+            $this->errors[] = $this->trans('The API URL is not valid: it must start with https://.', [], InjellikConfig::DOMAIN_ADMIN);
 
             return;
         }
-        if ($url !== InjellikApiClient::normalizeUrl(InjellikConfig::apiUrl())) {
+        $urlChanged = $url !== InjellikApiClient::normalizeUrl(InjellikConfig::apiUrl());
+        if ($urlChanged) {
+            // The secrets are never sent to another address than the one they were entered for.
             InjellikConfig::set(InjellikConfig::API_URL, $url);
+            InjellikConfig::set(InjellikConfig::LICENCE_KEY, '');
+            InjellikConfig::set(InjellikConfig::API_PASSWORD, '');
             InjellikConfig::set(InjellikConfig::JWT, '');
             InjellikConfig::set(InjellikConfig::JWT_EXPIRES, 0);
             InjellikApiClient::reset();
@@ -247,7 +292,7 @@ class AdminInjellikConfigurationController extends ModuleAdminController
         // Saving the configuration is also a new attempt for a shop the API refused.
         InjellikConfig::allowApiRetry((int) $this->context->shop->id);
 
-        Tools::redirectAdmin($this->url(['conf' => 4]) . '#injellik-advanced');
+        Tools::redirectAdmin($this->url(['conf' => 4]) . ($urlChanged ? '#injellik-connection' : '#injellik-advanced'));
     }
 
     /**

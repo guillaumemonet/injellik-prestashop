@@ -25,6 +25,9 @@ class InjellikIdentity
     const COOKIE_SEEN = 'injellik_seen';
     const SESSION_IDLE = 1800;
 
+    /** @var bool the visitor id has been created by the current request */
+    private static $newVisitor = false;
+
     public static function userUuid(?Context $context = null)
     {
         $context = $context ?: Context::getContext();
@@ -36,6 +39,7 @@ class InjellikIdentity
         $visitor = $cookie ? (string) $cookie->{self::COOKIE_VISITOR} : '';
         if ($visitor === '') {
             $visitor = 'v-' . self::uuid();
+            self::$newVisitor = true;
             self::write($context, [self::COOKIE_VISITOR => $visitor]);
         }
 
@@ -74,6 +78,20 @@ class InjellikIdentity
         $context = $context ?: Context::getContext();
 
         return $context->cookie && (string) $context->cookie->{self::COOKIE_SESSION} !== '';
+    }
+
+    /**
+     * True when the visitor was already known before this request (logged-in customer, or visitor cookie sent
+     * by the browser). A request without cookie, such as a script replaying a request, is not a visit.
+     */
+    public static function isKnownVisitor(?Context $context = null)
+    {
+        $context = $context ?: Context::getContext();
+        if ($context->customer && $context->customer->id && $context->customer->isLogged()) {
+            return true;
+        }
+
+        return !self::$newVisitor && $context->cookie && (string) $context->cookie->{self::COOKIE_VISITOR} !== '';
     }
 
     /**
