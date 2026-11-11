@@ -185,8 +185,9 @@ class InjellikRecommender
         try {
             $skus = self::extractSkus($this->callApi($strategy, $productIds, $user, $limit));
         } catch (InjellikApiException $e) {
-            if ($e->isAccessDenied()) {
-                // Suspended subscription or invalid key: the block is hidden, the back office shows why.
+            if ($e->isAccessDenied() || $e->isUnavailable()) {
+                // Suspended subscription, invalid key, or API unreachable a moment ago (error already
+                // recorded): the block is hidden, the back office shows why.
                 return [];
             }
             if ($e->getStatus() !== 404) {

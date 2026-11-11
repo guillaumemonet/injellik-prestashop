@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.2] - 2026-11-11
+
+### Corrigé
+- **Une API injoignable pouvait ralentir toute la boutique.** Chaque bloc attendait le délai de connexion deux fois (stratégie principale, puis stratégie de repli) avant de s'afficher vide. Comme l'échec n'était pas mémorisé, chaque visiteur attendait de nouveau, en occupant un processus PHP : avec quelques visiteurs simultanés, toutes les pages devenaient lentes, surtout sur un hébergement mutualisé.
+- Désormais, après une erreur réseau, un délai dépassé ou une API surchargée (HTTP 429, 502, 503, 504), la boutique n'appelle plus l'API pendant 60 secondes :
+  - les pages ne contiennent plus d'emplacement de bloc, donc aucune requête n'est lancée ;
+  - les événements restent en file, sans perdre de tentative, et partent au retour de l'API ;
+  - à la fin de la pause, une seule requête réessaie, pendant que les autres continuent à ne pas attendre.
+- Le back-office et la ligne de commande appellent toujours l'API, pour afficher l'erreur réelle ; un appel réussi lève la pause aussitôt.
+
 ## [2.1.1] - 2026-11-10
 
 ### Corrigé

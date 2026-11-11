@@ -273,6 +273,12 @@ class InjellikEventQueue
                 ]);
                 ++$sent;
             } catch (InjellikApiException $e) {
+                if ($e->isUnavailable()) {
+                    // Not sent, without using an attempt: the events wait for the API to be reachable again.
+                    $unreachable[$idShop] = true;
+
+                    continue;
+                }
                 if ($e->isAccessDenied()) {
                     // The event is valid: it stays pending, without using an attempt. The state of the
                     // API is stored by the client and displayed in the back office.

@@ -39,6 +39,7 @@ class InjellikConfig
     const LAST_CRON = 'INJELLIK_LAST_CRON';
     const LAST_ERROR = 'INJELLIK_LAST_ERROR';
     const API_STATE = 'INJELLIK_API_STATE';
+    const API_UNAVAILABLE_UNTIL = 'INJELLIK_API_UNAVAILABLE_UNTIL';
 
     /** Production API, used when no URL is configured */
     const DEFAULT_API_URL = 'https://injellik.web-nest.fr';
@@ -51,6 +52,8 @@ class InjellikConfig
     const STATE_INVALID_KEY = 'invalid_key';
     /** Seconds between two attempts while the API refuses the shop */
     const STATE_RETRY_DELAY = 900;
+    /** Seconds without calling the API from the shop after a network error, a timeout or an overloaded API */
+    const UNAVAILABLE_DELAY = 60;
 
     const SUBSCRIPTION_URL = 'https://web-nest.fr/mon-compte/abonnement/';
     const ACCOUNT_SHOPS_URL = 'https://web-nest.fr/mon-compte/boutiques/';
@@ -77,6 +80,7 @@ class InjellikConfig
             self::CACHE_TTL, self::HIDE_OUT_OF_STOCK, self::EXCLUDE_BOTS, self::AUTO_SYNC, self::CRON_TOKEN,
             self::CATALOG_SYNCED_AT, self::CATALOG_COUNT, self::IMPORT_LAST_ORDER, self::IMPORT_ORDERS_AT,
             self::IMPORT_ORDERS_COUNT, self::LAST_CRON, self::LAST_ERROR, self::API_STATE,
+            self::API_UNAVAILABLE_UNTIL,
             // Keys of version 1.x
             'INJELLIK_LAST_IMPORTED_ORDER_ID', 'INJELLIK_LAST_IMPORTED_PRODUCT_ID',
         ];
@@ -168,13 +172,61 @@ class InjellikConfig
     }
 
     /**
-     * True while the API must not be called: it refused the shop less than STATE_RETRY_DELAY seconds ago.
+     * True while the API must not be called: it refused the shop less than STATE_RETRY_DELAY seconds ago,
+     * or, for the requests of the shop, it could not be reached a moment ago.
      */
     public static function isApiBlocked($idShop = null)
+    {
+        return self::isApiRefused($idShop) || (self::isShopRequest() && self::isApiUnavailable($idShop));
+    }
+
+    /**
+     * True while the API refuses the shop (suspended subscription, invalid licence key): no new attempt
+     * before STATE_RETRY_DELAY seconds.
+     */
+    public static function isApiRefused($idShop = null)
     {
         $state = self::apiState($idShop);
 
         return $state !== null && (int) $state['checked_at'] > time() - self::STATE_RETRY_DELAY;
+    }
+
+    /**
+     * Unreachable, too slow or overloaded API: the shop does not wait for it until this time.
+     *
+     * The shop must never be slowed down by the API. Without this pause, every block and every sending of
+     * events would wait for the timeout and hold a PHP process, and a few visitors would be enough to use
+     * all the processes of the server.
+     */
+    public static function apiUnavailableUntil($idShop = null)
+    {
+        return (int) self::get(self::API_UNAVAILABLE_UNTIL, $idShop);
+    }
+
+    public static function isApiUnavailable($idShop = null)
+    {
+        return self::apiUnavailableUntil($idShop) > time();
+    }
+
+    public static function markApiUnavailable($seconds, $idShop = null)
+    {
+        self::set(self::API_UNAVAILABLE_UNTIL, time() + max(1, (int) $seconds), $idShop);
+    }
+
+    public static function clearApiUnavailable($idShop = null)
+    {
+        if (self::get(self::API_UNAVAILABLE_UNTIL, $idShop)) {
+            self::set(self::API_UNAVAILABLE_UNTIL, 0, $idShop);
+        }
+    }
+
+    /**
+     * Request of the shop (visitor, block, tracking, cron task), as opposed to the back office and the
+     * command line, which still call an unavailable API to show the real error to the merchant.
+     */
+    public static function isShopRequest()
+    {
+        return !defined('_PS_ADMIN_DIR_') && PHP_SAPI !== 'cli';
     }
 
     /**

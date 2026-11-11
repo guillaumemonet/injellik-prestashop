@@ -16,6 +16,8 @@ class InjellikApiException extends Exception
     const ERROR_SUSPENDED = 'tenant_suspended';
     /** Licence key unknown or revoked (HTTP 401 in licence key mode) */
     const ERROR_INVALID_KEY = 'invalid_licence_key';
+    /** Not an API error: the module did not call the API, unreachable a moment ago */
+    const ERROR_UNAVAILABLE = 'api_unavailable';
 
     /** @var int HTTP status, 0 when the API could not be reached */
     private $status;
@@ -61,6 +63,22 @@ class InjellikApiException extends Exception
      * The API refuses the shop as a whole (suspended subscription, invalid licence key):
      * no request can succeed until the merchant acts.
      */
+    /**
+     * Thrown without calling the API: it was unreachable a moment ago (see InjellikConfig::UNAVAILABLE_DELAY).
+     */
+    public function isUnavailable()
+    {
+        return $this->errorCode === self::ERROR_UNAVAILABLE;
+    }
+
+    /**
+     * Network error, timeout or overloaded API: the shop stops calling it for a moment.
+     */
+    public function isOutage()
+    {
+        return !$this->isUnavailable() && in_array($this->status, [0, 429, 502, 503, 504], true);
+    }
+
     public function isAccessDenied()
     {
         return $this->isSuspended() || $this->isInvalidKey();
@@ -80,7 +98,7 @@ class InjellikApiException extends Exception
  */
 class InjellikApiClient
 {
-    const VERSION = '2.1.1';
+    const VERSION = '2.1.2';
 
     /** @var InjellikApiClient[] */
     private static $instances = [];
@@ -240,11 +258,20 @@ class InjellikApiClient
 
         $state = $this->persist ? InjellikConfig::apiState($this->idShop) : null;
         if ($state) {
-            if (InjellikConfig::isApiBlocked($this->idShop)) {
+            if (InjellikConfig::isApiRefused($this->idShop)) {
                 throw self::refusal($state['reason']);
             }
             // This request is the new attempt: the concurrent ones keep waiting.
             InjellikConfig::touchApiState($this->idShop);
+        }
+
+        $unavailable = $this->persist ? InjellikConfig::apiUnavailableUntil($this->idShop) : 0;
+        if ($unavailable && InjellikConfig::isShopRequest()) {
+            if ($unavailable > time()) {
+                throw new InjellikApiException('The Injellik API was unreachable a moment ago: not called before ' . date('H:i:s', $unavailable) . '.', 0, InjellikApiException::ERROR_UNAVAILABLE);
+            }
+            // This request is the new attempt: the concurrent ones keep not calling the API meanwhile.
+            InjellikConfig::markApiUnavailable($this->timeout + 1, $this->idShop);
         }
 
         try {
@@ -253,11 +280,20 @@ class InjellikApiClient
             if ($this->persist && $e->isAccessDenied()) {
                 InjellikConfig::setApiState($e->isSuspended() ? InjellikConfig::STATE_SUSPENDED : InjellikConfig::STATE_INVALID_KEY, $this->idShop);
             }
+            if ($this->persist && $e->isOutage()) {
+                InjellikConfig::markApiUnavailable(InjellikConfig::UNAVAILABLE_DELAY, $this->idShop);
+            } elseif ($unavailable) {
+                // The API answered (even with an error): it is reachable again.
+                InjellikConfig::clearApiUnavailable($this->idShop);
+            }
             throw $e;
         }
 
         if ($state) {
             InjellikConfig::clearApiState($this->idShop);
+        }
+        if ($unavailable) {
+            InjellikConfig::clearApiUnavailable($this->idShop);
         }
 
         return $data;
