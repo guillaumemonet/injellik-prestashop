@@ -28,6 +28,8 @@ class InjellikEventQueue
     const STATUS_SENT = 'sent';
     const STATUS_ERROR = 'error';
     const MAX_ATTEMPTS = 5;
+    /** Older pending events sent after a request, at most (see sendBacklog()) */
+    const BACKLOG_BATCH = 20;
 
     /** @var int[] rows created by the current request */
     private static $created = [];
@@ -112,9 +114,42 @@ class InjellikEventQueue
                    AND `status` = \'' . self::STATUS_PENDING . '\'
                  ORDER BY `id_injellik_event`'
             );
-            self::sendRows($rows ?: []);
+            $result = self::sendRows($rows ?: []);
+            if (!$result['failed'] && $rows) {
+                self::sendBacklog((int) $rows[0]['id_shop']);
+            }
         } catch (Throwable $e) {
             PrestaShopLogger::addLog('[Injellik] ' . $e->getMessage(), 2, null, 'Module', 0, false);
+        }
+    }
+
+    /**
+     * Sends a few events left pending (API unreachable for a while, response that could not be released),
+     * once the response is delivered: without a cron task, they would otherwise wait for the dashboard.
+     *
+     * Only events older than one minute (the request that created them has already tried), and by one
+     * request at a time (non-blocking MySQL lock), so that no event is sent twice.
+     */
+    public static function sendBacklog($idShop)
+    {
+        if (!InjellikConfig::isConfigured($idShop) || InjellikConfig::isApiBlocked($idShop)) {
+            return;
+        }
+        $db = Db::getInstance();
+        $lock = "'" . md5(_DB_NAME_ . _DB_PREFIX_ . 'injellik_backlog_' . (int) $idShop) . "'";
+        if (!(int) $db->getValue('SELECT GET_LOCK(' . $lock . ', 0)', false)) {
+            return;
+        }
+        try {
+            $rows = $db->executeS(
+                'SELECT * FROM `' . _DB_PREFIX_ . self::TABLE . '`
+                 WHERE `status` = \'' . self::STATUS_PENDING . '\' AND `id_shop` = ' . (int) $idShop . '
+                   AND `date_add` < \'' . pSQL(date('Y-m-d H:i:s', time() - 60)) . '\'
+                 ORDER BY `id_injellik_event` LIMIT ' . self::BACKLOG_BATCH
+            );
+            self::sendRows($rows ?: []);
+        } finally {
+            $db->getValue('SELECT RELEASE_LOCK(' . $lock . ')', false);
         }
     }
 
@@ -154,7 +189,10 @@ class InjellikEventQueue
             pSQL($userUuid),
             max(1, (int) $limit)
         ));
-        self::sendRows($rows ?: []);
+        $result = self::sendRows($rows ?: []);
+        if (!$result['failed']) {
+            self::sendBacklog((int) $idShop);
+        }
     }
 
     private static function releaseResponse()

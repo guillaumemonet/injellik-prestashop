@@ -10,6 +10,9 @@
   - à la fin de la pause, une seule requête réessaie, pendant que les autres continuent à ne pas attendre.
 - Le back-office et la ligne de commande appellent toujours l'API, pour afficher l'erreur réelle ; un appel réussi lève la pause aussitôt.
 
+### Ajouté
+- Les événements restés en attente (API injoignable un moment, serveur sans PHP-FPM) repartent d'eux-mêmes, même sans tâche cron : après la réponse d'une visite, le module en envoie jusqu'à 20 de plus d'une minute, une seule requête à la fois, sans doublon ni attente pour le visiteur.
+
 ## [2.1.1] - 2026-11-10
 
 ### Corrigé
